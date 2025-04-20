@@ -1,0 +1,7 @@
+backend/venv/
+*.DS_Store
+*.log
+__pycache__/
+*.py[cod]
+.vscode/
+*.swp
