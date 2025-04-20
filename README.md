@@ -4,6 +4,7 @@ Python version: 3.12.3
 
 ## Repository structure:
 
+```
 recap-and-forecast-bot/
     backend/
         app/
@@ -17,3 +18,4 @@ recap-and-forecast-bot/
         docker-compose.yml
     README.md
     .gitignore
+```
