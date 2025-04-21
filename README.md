@@ -22,7 +22,15 @@ recap-and-forecast-bot/
 
 ## Setup
 
-This project utilizes the OpenAI API. Please sign up for an API key and store it as an environment variable. You can do this by navigating to the project's root directory and running the following command:
+This project utilizes the OpenAI API. Please sign up for an API key and store it as an environment variable. You can do this by running the following command from the project's root directory:
 ```
 mkdir -p ./backend && echo "OPENAI_API_KEY=your_api_key" > ./backend/.env
+```
+
+## Running the app
+
+> **Note:** Make sure you have [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+From the project's root directory, run the following command:
+```
+docker compose --file infrastructure/docker-compose.yml up --build
 ```
