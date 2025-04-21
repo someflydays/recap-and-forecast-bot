@@ -14,7 +14,6 @@ load_dotenv()
 
 # Instantiate FastAPI app
 app = FastAPI()
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -39,18 +38,21 @@ class ChatResponse(BaseModel):
     response: str
 
 # Define graph state schema
-class MessagesState(TypedDict):
-    messages: Annotated[list[AnyMessage], add_messages]
-    mode: str
-    timeframe: str
+args = TypeDict('MessagesState', {
+    messages: Annotated[list[AnyMessage], add_messages],
+    mode: str,
+    timeframe: str,
     token: str
+})
+class MessagesState(args):
+    pass
 
 """
 Define nodes and router functions
 """
-def input_handler(state: MessagesState) -> dict:
+def input_handler(state: MessagesState) -> MessagesState:
     # TODO: Add logic to process user input
-    return state # For now, just return state
+    return state # For now, return state
     
 def query_router(state: MessagesState) -> str:
     mode = state.get("mode")
@@ -61,19 +63,19 @@ def query_router(state: MessagesState) -> str:
     else:
         return "create_general_prompt"
     
-def create_recap_query(state: MessagesState) -> dict:
+def create_recap_query(state: MessagesState) -> MessagesState:
     # TODO: Call internal_llm
     pass
 
-def create_foresight_query(state: MessagesState) -> dict:
+def create_foresight_query(state: MessagesState) -> MessagesState:
     # TODO: Call internal_llm
     pass
     
-def create_general_prompt(state: MessagesState) -> dict:
+def create_general_prompt(state: MessagesState) -> MessagesState:
     # TODO: Call internal_llm
     pass
     
-def run_search(state: MessagesState) -> dict:
+def run_search(state: MessagesState) -> MessagesState:
     # TODO: Use SERP tool
     pass
     
@@ -86,15 +88,15 @@ def response_router(state: MessagesState) -> str:
     else:
         return "generate_general_response"
     
-def generate_deterministic_serped_response(state: MessagesState) -> dict:
+def generate_deterministic_serped_response(state: MessagesState) -> MessagesState:
     # TODO: Call deterministic_streaming_llm
     pass
     
-def generate_creative_serped_response(state: MessagesState) -> dict:
+def generate_creative_serped_response(state: MessagesState) -> MessagesState:
     # TODO: Call creative_streaming_llm
     pass
     
-def generate_general_response(state: MessagesState) -> dict:
+def generate_general_response(state: MessagesState) -> MessagesState:
     # TODO: Call deterministic_streaming_llm
     pass
 
