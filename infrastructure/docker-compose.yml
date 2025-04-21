@@ -5,3 +5,9 @@ services:
       - "8000:8000"         # Expose port 8000
     env_file:
       - ../backend/.env     # Load environment vars
+
+  frontend:
+    build:
+      context: ../frontend  # Build frontend Docker image
+    ports:
+      - "3000:3000"         # Expose port 3000
