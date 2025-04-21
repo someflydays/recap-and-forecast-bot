@@ -1,15 +1,25 @@
+from fastapi import FastAPI
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
+from pydantic import BaseModel
 
 # Load API key
 load_dotenv()
 
-# Set up the LLM
+# Instantiate FastAPI app
+app = FastAPI()
+
+# Set up LLM
 llm = ChatOpenAI(model="gpt-4o", temperature=0)
 
-# Quick test
-if __name__ == "__main__":
-    test_message = [HumanMessage(content=f"Testing, 1 2 3!", name="Derek")]
-    response = llm.invoke(test_message)
-    print(response.content)
+# Define request and response schemas
+class ChatRequest(BaseModel):
+    message: str
+class ChatResponse(BaseModel):
+    response: str
+
+@app.post("/api/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest):
+    result = llm.invoke([HumanMessage(content=request.message)])
+    return ChatResponse(response=result.content)

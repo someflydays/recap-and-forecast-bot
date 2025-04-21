@@ -8,7 +8,6 @@ Python version: 3.13.3
 recap-and-forecast-bot/
     backend/
         app/
-            main.py
             chatbot.py
         README.md
         Dockerfile
