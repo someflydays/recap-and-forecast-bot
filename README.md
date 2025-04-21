@@ -20,3 +20,10 @@ recap-and-forecast-bot/
     README.md
     .gitignore
 ```
+
+## Setup
+
+This project utilizes the OpenAI API. Please sign up for an API key and store it as an environment variable. You can do this by navigating to the project's root directory and running the following command:
+```
+mkdir -p ./backend && echo "OPENAI_API_KEY=your_api_key" > ./backend/.env
+```
