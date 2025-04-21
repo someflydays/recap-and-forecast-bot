@@ -43,6 +43,7 @@ mkdir -p ./backend && echo "OPENAI_API_KEY=your_api_key" > ./backend/.env
 ## Running the app
 
 > **Note:** Make sure you have [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+
 From the project's root directory, run the following command:
 ```
 docker compose --file infrastructure/docker-compose.yml up --build
