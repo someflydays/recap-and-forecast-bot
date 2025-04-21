@@ -1,10 +1,13 @@
 from fastapi import FastAPI
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, AnyMessage
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, START, END
-from langgraph.prebuilt import MessagesState, ToolNode
 from dotenv import load_dotenv
 from pydantic import BaseModel
+from typing_extensions import TypedDict
+from typing import Annotated
+from langgraph.graph.message import add_messages
+from fastapi.middleware.cors import CORSMiddleware
 
 # Load API key
 load_dotenv()
@@ -12,19 +15,31 @@ load_dotenv()
 # Instantiate FastAPI app
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Set up LLM
 llm = ChatOpenAI(model="gpt-4o", temperature=0)
 
-# Define request schema
+# Define API request schema
 class ChatRequest(BaseModel):
     message: str
     mode: str # "recap", "foresight", "general"
     timeframe: str # "today", "this week", etc.
     
-# Define response schema
+# Define API response schema
 class ChatResponse(BaseModel):
     response: str
-    
+
+# Define graph state schema
+class MessagesState(TypedDict):
+    messages: Annotated[list[AnyMessage], add_messages]
+
 def input_handler(state: MessagesState) -> dict:
     pass
     

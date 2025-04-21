@@ -9,15 +9,24 @@ recap-and-forecast-bot/
     backend/
         app/
             chatbot.py
-        README.md
         Dockerfile
         requirements.txt
+        README.md
     frontend/
+        app/
+            globals.css
+            layout.tsx
+            page.tsx
+        components/
+            ChatForm.tsx
+        pubilc/
+        tailwind.config.js
+        postcss.config.js
         README.md
     infrastructure/
         docker-compose.yml
-    README.md
     .gitignore
+    README.md
 ```
 
 ## Setup
