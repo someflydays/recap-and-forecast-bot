@@ -19,9 +19,13 @@ recap-and-forecast-bot/
             page.tsx
         components/
             ChatForm.tsx
-        pubilc/
+        Dockerfile
         tailwind.config.js
         postcss.config.js
+        package.json
+        package-lock.json
+        next-env.d.ts
+        tsconfig.json
         README.md
     infrastructure/
         docker-compose.yml
