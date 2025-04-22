@@ -1,27 +1,29 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 
-const ChatForm = () => {
+export default function ChatForm() {
   const [message, setMessage] = useState("");
   const [mode, setMode] = useState<"recap" | "foresight" | "general">("recap");
   const [timeframe, setTimeframe] = useState<
   "today" | "this week" | "this month" | "this year"
 >("today");
+
   const [response, setResponse] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [status, setStatus] = useState("");
-  const [controller, setController] = useState<AbortController | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    controller?.abort();
+  const controllerRef = useRef<AbortController | null>(null);
+
+  const startStreaming = async () => {
+    controllerRef.current?.abort();
 
     const ctrl = new AbortController();
-    setController(ctrl);
+    controllerRef.current = ctrl;
+
     setIsStreaming(true);
-    setStatus("Processing your input...");
+    setStatus("Generating a web‑search query...");
     setResponse("");
 
     const payload = { message, mode, timeframe };
@@ -32,8 +34,6 @@ const ChatForm = () => {
         body: JSON.stringify(payload),
         signal: ctrl.signal
       });
-
-      setStatus("Generating a web-search query...");
 
       if (!res.body) {
         throw new Error("No response stream.");
@@ -51,11 +51,11 @@ const ChatForm = () => {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
         if (value) {
-          const chunk = decoder.decode(value);
           if (first) {
             setStatus("Generating the report...");
             first = false;
           }
+          const chunk = decoder.decode(value);
           setResponse((prev) => prev + chunk);
         }
       }
@@ -68,15 +68,33 @@ const ChatForm = () => {
         console.error(err);
       }
     } finally {
-      // always flip button back to Submit
       setIsStreaming(false);
-      setController(null);
+      controllerRef.current = null;
+    }
+  };
+
+  const handleButtonClick = () => {
+    if (isStreaming) {
+      controllerRef.current?.abort();
+      setIsStreaming(false);
+      setStatus("Cancelled.");
+      controllerRef.current = null;
+    } else {
+      startStreaming();
+    }
+  };
+
+  // Enter key
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !isStreaming) {
+      e.preventDefault();
+      startStreaming();
     }
   };
 
   return (
     <div className="space-y-4 max-w-md mx-auto mt-10">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onKeyDown={handleKeyDown} className="space-y-4">
         <textarea
           className="w-full p-2 border rounded"
           rows={4}
@@ -110,8 +128,8 @@ const ChatForm = () => {
         </select>
 
         <button
-          type={isStreaming ? "button" : "submit"}
-          onClick={isStreaming ? () => controller?.abort() : undefined}
+          type="button"
+          onClick={handleButtonClick}
           className={`w-full py-2 px-4 rounded ${
             isStreaming
               ? "bg-gray-400 text-gray-700"
@@ -156,5 +174,3 @@ const ChatForm = () => {
     </div>
   );
 };
-
-export default ChatForm;
