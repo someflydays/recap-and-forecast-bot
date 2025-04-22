@@ -14,10 +14,6 @@ const ChatForm = () => {
   const [status, setStatus] = useState("");
   const [controller, setController] = useState<AbortController | null>(null);
 
-  useEffect(() => {
-    document.title = "Recap & Forecast SERP Bot";
-  }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     controller?.abort();
@@ -25,7 +21,7 @@ const ChatForm = () => {
     const ctrl = new AbortController();
     setController(ctrl);
     setIsStreaming(true);
-    setStatus("Connecting…");
+    setStatus("Processing your input...");
     setResponse("");
 
     const payload = { message, mode, timeframe };
@@ -37,33 +33,44 @@ const ChatForm = () => {
         signal: ctrl.signal
       });
 
+      setStatus("Generating a web-search query...");
+
       if (!res.body) {
         throw new Error("No response stream.");
       }
 
+      setStatus("Searching the web...");
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      let done = false;
 
-      setStatus("Generating…");
+      setStatus("Preparing to generate a report...");
+      let done = false;
+      let first = true;
+
       while (!done) {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
         if (value) {
-          // assume plain-text stream of tokens
           const chunk = decoder.decode(value);
+          if (first) {
+            setStatus("Generating the report...");
+            first = false;
+          }
           setResponse((prev) => prev + chunk);
         }
       }
-      setIsStreaming(false);
-      setController(null);
+      setStatus("Complete.");
     } catch (err: any) {
       if (err.name === "AbortError") {
-        setStatus("Cancelled");
+        setStatus("Cancelled.");
       } else {
-        setStatus("Error");
+        setStatus("Error.");
         console.error(err);
       }
+    } finally {
+      // always flip button back to Submit
+      setIsStreaming(false);
+      setController(null);
     }
   };
 
@@ -116,7 +123,29 @@ const ChatForm = () => {
       </form>
 
       {isStreaming && (
-        <p className="mt-2 text-sm italic">Status: {status}</p>
+        <div className="flex items-center space-x-2 mt-2">
+          <svg
+            className="animate-spin h-5 w-5 text-gray-500"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+            />
+          </svg>
+          <span className="text-sm italic">{status}</span>
+        </div>
       )}
 
       {response && (
