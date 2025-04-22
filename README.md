@@ -1,7 +1,5 @@
 # Recap and Forecast Bot
 
-Python version: 3.13.3
-
 ## Repository structure:
 
 ```
@@ -45,9 +43,27 @@ echo "TAVILY_API_KEY=your_api_key" > ./backend/.env
 
 ## Running the app
 
+### Option 1: Using Docker
+
 > **Note:** Make sure you have [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
 
 From the project's root directory, run the following command:
 ```
 docker compose --file infrastructure/docker-compose.yml up --build
 ```
+
+### Option 2: Local Development
+
+If you would like to spin up the backend and frontend for development, run the following commands sequentially:
+
+1. From the `recap-and-forecast-bot/backend/` directory
+```
+uvicorn app.chatbot:app --reload
+```
+Then navigate to http://localhost:8000 in a browser to access the backend.
+
+2. From the `recap-and-forecast-bot/frontend/` directory:
+```
+npm run dev
+```
+Then navigate to http://localhost:3000 in a browser to access the frontend.
