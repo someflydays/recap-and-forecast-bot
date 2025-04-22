@@ -30,6 +30,7 @@ recap-and-forecast-bot/
     README.md
 ```
 <br>
+
 ## Setup
 
 This project utilizes the OpenAI API and the Tavily API. Please visit their websites to sign up for API keys, and store them as an environment variables. You can do this by running the following commands from the project's root directory:
@@ -40,6 +41,7 @@ mkdir -p ./backend && echo "OPENAI_API_KEY=your_api_key" > ./backend/.env
 echo "TAVILY_API_KEY=your_api_key" > ./backend/.env
 ```
 <br>
+
 ## Running the App
 
 ### Option 1: Using Docker
@@ -85,6 +87,7 @@ Then navigate to http://localhost:3000 in a browser to access the frontend.
 pre-commit install
 ```
 <br>
+
 ## Authentication and Deployment Considerations
 
 ### Deployment
@@ -99,6 +102,7 @@ pre-commit install
 - OPTIONAL: OAuth2 for 3rd-party integrations (such as Google Calendar, etc.) with renewal ticket encrypted at rest
 
 <br>
+
 ## Prioritizations
 
 Given this project's need for speed and focus on backend development, I prioritized the following tasks according to urgency and data-dependencies:
