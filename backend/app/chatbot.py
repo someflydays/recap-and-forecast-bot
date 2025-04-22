@@ -207,4 +207,4 @@ async def chat(request: ChatRequest):
         for chunk in llm.stream([HumanMessage(content=final_prompt)]):
             yield chunk.content
 
-    return StreamingResponse(gen(), media_type="text/plain")
+    return StreamingResponse(gen(), media_type="text/plain") 
