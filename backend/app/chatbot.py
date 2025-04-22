@@ -25,11 +25,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Set up LLMs
-internal_llm = ChatOpenAI(model="gpt-4o", temperature=0)
-deterministic_streaming_llm = ChatOpenAI(model="gpt-4o", streaming=True, temperature=0)
-creative_streaming_llm = ChatOpenAI(model="gpt-4o", streaming=True, temperature=0.4)
-
 # Define API request schema
 class ChatRequest(BaseModel):
     message: str
@@ -60,7 +55,8 @@ def input_handler(state: MessagesState) -> MessagesState:
     full_prompt = (
         (system_instruction) + ("\n\nBased on the following user input:\n\n") + (state["messages"][-1].content) + ("\n\nExtract the topic.")
     )
-    topic = internal_llm.invoke([full_prompt]).content
+    llm = ChatOpenAI(model="gpt-4o", temperature=0.2) # Fast, flexible
+    topic = llm.invoke([full_prompt]).content
     state["topic"] = topic
     return state
     
@@ -83,14 +79,16 @@ def create_general_prompt(state: MessagesState) -> MessagesState:
     )
     topic = state.get("topic")
     full_prompt = (system_instruction) + ("\n\nBased on the following topic:\n\n") + topic + ("\n\nGenerate the prompt.")
-    response = internal_llm.invoke([full_prompt])
+    llm = ChatOpenAI(model="o4-mini", temperature=0.2) # Fast, affordable reasoning model
+    response = llm.invoke([full_prompt])
     ai_message = AIMessage(content=(response.content))
     state["messages"].append(ai_message)
     return state
     
 def generate_general_response(state: MessagesState) -> MessagesState:
     engineered_prompt = state["messages"][-1].content
-    response = deterministic_streaming_llm.invoke([engineered_prompt])
+    llm = ChatOpenAI(model="gpt-4o", temperature=0, streaming=True) # Fast, flexible
+    response = llm.invoke([engineered_prompt])
     ai_message = AIMessage(content=(response.content))
     state["messages"].append(ai_message)
     return state
@@ -100,7 +98,8 @@ def create_recap_query(state: MessagesState) -> MessagesState:
         "You will be given a topic, a timeframe, and today's date. For example: {'topic': 'AI', 'timeframe': 'this week', 'date' : 'April 21, 2025'}\n\nYour goal is to generate a well-structured query for use in web-search, with the aim of finding the most impactful and most relevant information about what's been happening with the given topic during the given timeframe (relative to today's date)."
     )
     full_prompt = (system_instruction) + ("\n\nHere is the topic that the user specified:\n\n") + state.get("topic") + ("\n\nHere is the timeframe that the user specified:\n\n") + state.get("timeframe") + ("\n\nHere is today's date:\n\n") + ((datetime.now().date()).strftime("%B %d, %Y")) + ("\n\nNow formulate your query.")
-    response = internal_llm.invoke([full_prompt])
+    llm = ChatOpenAI(model="o4-mini", temperature=0) # Fast, affordable reasoning model
+    response = llm.invoke([full_prompt])
     ai_message = AIMessage(content=(response.content))
     state["messages"].append(ai_message)
     return state
@@ -110,7 +109,8 @@ def create_foresight_query(state: MessagesState) -> MessagesState:
         "You will be given a topic, a timeframe, and today's date. For example: {'topic': 'AI', 'timeframe': 'this week', 'date' : 'April 21, 2025'}\n\nYour goal is to generate a well-structured query for use in web-search, with the aim of finding the most impactful and most insightful information about what will most likely happen with the given topic during the given timeframe (relative to today's date). Your query should focus on finding upcoming events, news, or important things that are scheduled to happen during the given timeframe. Your query should also find key information that can later be used for trend analysis about what might happen regarding the topic in the given timeframe. Based on this goal, formulate a well-structured web-search query"
     )
     full_prompt = (system_instruction) + ("\n\nHere is the topic that the user specified:\n\n") + state.get("topic") + ("\n\nHere is the timeframe that the user specified:\n\n") + state.get("timeframe") + ("\n\nHere is today's date:\n\n") + ((datetime.now().date()).strftime("%B %d, %Y")) + ("\n\nNow formulate your query.")
-    response = internal_llm.invoke([full_prompt])
+    llm = ChatOpenAI(model="o4-mini", temperature=0) # Fast, affordable reasoning model
+    response = llm.invoke([full_prompt])
     ai_message = AIMessage(content=(response.content))
     state["messages"].append(ai_message)
     return state
@@ -137,7 +137,8 @@ def create_recap_prompt(state: MessagesState) -> MessagesState:
         "You are a prompt engineer. An LLM will be invoked with the prompt that you create. Your job is to create a prompt based on given SERP results. Do not output anything other than your prompt.\n\n" + "A user has specified a topic, a timeframe, and today's date.\nFor example: {'topic': 'AI', 'timeframe': 'this week', 'date': 'April 21, 2025'}.\n\n" + "The user's input has been passed to a SERP tool, which searched the web for news/events/stories/breakthroughs/info about important things that have been happening regarding that topic during the specified timeframe (relative to today's date).\nFor example: if the user's input was {'topic': 'AI', 'timeframe': 'this week', 'date': 'April 21, 2025'}, then the SERP tool searched the web for AI news that's happening the week of April 21, 2025.\n\n" + "You will be given the SERP tool's search results, and you need to write a prompt that tells the LLM to list the most relevant search results in a well-formatted report. Each listed search result should include a bold title, a concise one-sentence summary, the link to the search result (as a hyperlink), and a new line between each of those sections. Don't explicitly say 'Title:' or 'Summary:'. There should be no main title of the report, and tell the LLM to not output anything other than the report. Use your best prompt engineering skills to construct your prompt for the LLM."
     )
     full_prompt = (system_instruction) + ("\n\nHere is the topic that the user specified:\n\n") + state.get("topic") + ("\n\nHere is the timeframe that the user specified:\n\n") + state.get("timeframe") + ("\n\nHere is today's date:\n\n") + ((datetime.now().date()).strftime("%B %d, %Y")) + ("\n\nHere are the search results from the SERP tool:\n\n") + state["messages"][-1].content + ("\n\n\nGenerate your prompt.\n\n")
-    response = internal_llm.invoke([full_prompt])
+    llm = ChatOpenAI(model="gpt-4o", temperature=0.1) # Fast, flexible
+    response = llm.invoke([full_prompt])
     ai_message = AIMessage(content=(response.content))
     state["messages"].append(ai_message)
     return state
@@ -147,7 +148,8 @@ def create_foresight_prompt(state: MessagesState) -> MessagesState:
         "You are a prompt engineer. An LLM will be invoked with the prompt that you create. Your job is to create a prompt based on given SERP results. Do not output anything other than your prompt.\n\n" + "A user has specified a topic, a timeframe, and today's date.\nFor example: {'topic': 'AI', 'timeframe': 'this week', 'date': 'April 21, 2025'}.\n\n" + "The user's input has been passed to a SERP tool, which searched the web for news/events/stories/breakthroughs/info about that topic, with the goal of gathering enough relevant information to formulate credible speculative insights about what will likely happen during the specified timeframe (relative to today's date).\n\n" + "For example: if the user's input was {'topic': 'AI', 'timeframe': 'this week', 'date': 'April 21, 2025'}, then the SERP tool searched the web for news/stories/events/articles about AI with the goal of eventually using that information for trend analysis to generate a report about specific things that will happen regarding AI this week (with sources), and credible speculative ideas about what is likely to happen regarding AI this week (with reasoning).\n\n" + "You will be given the SERP tool's search results, and you need to write a prompt that tells the LLM to generate this report. Each deterministic upcoming event in the report should include a bold title, a one-sentence summary, a link to the relevant search result (as a hyperlink), and a new line between each of those sections. Each prediction in the report should include a bold title, a concise summary, a justification section where the user can see exactly why this insight has been predicted, and a new line between each of those sections. There should be no main title of the report, and tell the LLM to not output anything other than the report. Add a two new lines to separate each result. Use your best prompt engineering skills to construct your prompt for the LLM."
     )
     full_prompt = (system_instruction) + ("\n\nHere is the topic that the user specified:\n\n") + state.get("topic") + ("\n\nHere is the timeframe that the user specified:\n\n") + state.get("timeframe") + ("\n\nHere is today's date:\n\n") + ((datetime.now().date()).strftime("%B %d, %Y")) + ("\n\nHere are the search results from the SERP tool:\n\n") + state["messages"][-1].content + ("\n\nGenerate your prompt.\n\n")
-    response = internal_llm.invoke([full_prompt])
+    llm = ChatOpenAI(model="gpt-4o", temperature=0.1) # Fast, flexible
+    response = llm.invoke([full_prompt])
     ai_message = AIMessage(content=(response.content))
     state["messages"].append(ai_message)
     return state
@@ -156,21 +158,24 @@ def generate_unsure_response(state: MessagesState) -> MessagesState:
     system_instruction = (
         "Please tell the user that you are unsure what topic they are trying to specify, and suggest that they specify a topic in the text box. Do not output anything other than your message to the user."
     )
-    response = creative_streaming_llm.invoke([system_instruction])
+    llm = ChatOpenAI(model="gpt-4o", temperature=0.3, streaming=True) # Fast, flexible
+    response = llm.invoke([system_instruction])
     ai_message = AIMessage(content=(response.content))
     state["messages"].append(ai_message)
     return state
     
 def generate_deterministic_serped_response(state: MessagesState) -> MessagesState:
     engineered_prompt = state["messages"][-1].content
-    response = deterministic_streaming_llm.invoke([engineered_prompt])
+    llm = ChatOpenAI(model="o4-mini", temperature=0, streaming=True) # Fast, affordable reasoning model
+    response = llm.invoke([engineered_prompt])
     ai_message = AIMessage(content=(response.content))
     state["messages"].append(ai_message)
     return state
     
 def generate_creative_serped_response(state: MessagesState) -> MessagesState:
     engineered_prompt = state["messages"][-1].content
-    response = creative_streaming_llm.invoke([engineered_prompt])
+    llm = ChatOpenAI(model="o4-mini", temperature=0.5, streaming=True) # Fast, affordable reasoning model
+    response = llm.invoke([engineered_prompt])
     ai_message = AIMessage(content=(response.content))
     state["messages"].append(ai_message)
     return state
