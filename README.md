@@ -35,9 +35,12 @@ recap-and-forecast-bot/
 
 ## Setup
 
-This project utilizes the OpenAI API. Please sign up for an API key and store it as an environment variable. You can do this by running the following command from the project's root directory:
+This project utilizes the OpenAI API and the Tavily API. Please visit their websites to sign up for API keys, and store them as an environment variables. You can do this by running the following commands from the project's root directory:
 ```
 mkdir -p ./backend && echo "OPENAI_API_KEY=your_api_key" > ./backend/.env
+```
+```
+echo "TAVILY_API_KEY=your_api_key" > ./backend/.env
 ```
 
 ## Running the app
