@@ -1,15 +1,19 @@
-FROM python:3.13.3-slim
+FROM python:3.11-slim
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends build-essential \
- && pip install --upgrade pip setuptools wheel \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY requirements.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip wheel \
+  && pip install \
+    --default-timeout=100 \
+    --retries=10 \
+    --no-cache-dir \
+    -r requirements.txt
 
 COPY . .
 
