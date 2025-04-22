@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from langchain_core.messages import HumanMessage, AIMessage, AnyMessage
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, AnyMessage
+from fastapi.responses import StreamingResponse
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, START, END
 from dotenv import load_dotenv
@@ -63,7 +64,7 @@ def input_handler(state: MessagesState) -> MessagesState:
 def query_router(state: MessagesState) -> str:
     topic = state.get("topic")
     if topic == "unclear":
-        return "generate_unsure_response"
+        return "generate_unsure_prompt"
     else:
         mode = state.get("mode")
         if mode == "recap":
@@ -81,14 +82,6 @@ def create_general_prompt(state: MessagesState) -> MessagesState:
     full_prompt = (system_instruction) + ("\n\nBased on the following topic:\n\n") + topic + ("\n\nGenerate the prompt.")
     llm = ChatOpenAI(model="o4-mini") # Fast, affordable reasoning model
     response = llm.invoke([full_prompt])
-    ai_message = AIMessage(content=(response.content))
-    state["messages"].append(ai_message)
-    return state
-    
-def generate_general_response(state: MessagesState) -> MessagesState:
-    engineered_prompt = state["messages"][-1].content
-    llm = ChatOpenAI(model="gpt-4o", temperature=0, streaming=True) # Fast, flexible
-    response = llm.invoke([engineered_prompt])
     ai_message = AIMessage(content=(response.content))
     state["messages"].append(ai_message)
     return state
@@ -154,30 +147,12 @@ def create_foresight_prompt(state: MessagesState) -> MessagesState:
     state["messages"].append(ai_message)
     return state
     
-def generate_unsure_response(state: MessagesState) -> MessagesState:
+def generate_unsure_prompt(state: MessagesState) -> MessagesState:
     system_instruction = (
         "Please tell the user that you are unsure what topic they are trying to specify, and suggest that they specify a topic in the text box. Do not output anything other than your message to the user."
     )
-    llm = ChatOpenAI(model="gpt-4o", temperature=0.3, streaming=True) # Fast, flexible
-    response = llm.invoke([system_instruction])
-    ai_message = AIMessage(content=(response.content))
-    state["messages"].append(ai_message)
-    return state
-    
-def generate_deterministic_serped_response(state: MessagesState) -> MessagesState:
-    engineered_prompt = state["messages"][-1].content
-    llm = ChatOpenAI(model="o4-mini", streaming=True) # Fast, affordable reasoning model
-    response = llm.invoke([engineered_prompt])
-    ai_message = AIMessage(content=(response.content))
-    state["messages"].append(ai_message)
-    return state
-    
-def generate_creative_serped_response(state: MessagesState) -> MessagesState:
-    engineered_prompt = state["messages"][-1].content
-    llm = ChatOpenAI(model="o4-mini", streaming=True) # Fast, affordable reasoning model
-    response = llm.invoke([engineered_prompt])
-    ai_message = AIMessage(content=(response.content))
-    state["messages"].append(ai_message)
+    system_message = SystemMessage(content=(system_instruction))
+    state["messages"].append(system_message)
     return state
 
 # Create graph
@@ -187,41 +162,29 @@ builder = StateGraph(MessagesState)
 builder.add_node("input_handler", input_handler)
 builder.add_node("create_recap_query", create_recap_query)
 builder.add_node("create_foresight_query", create_foresight_query)
-builder.add_node("create_general_prompt", create_general_prompt)
-builder.add_node("generate_general_response", generate_general_response)
-builder.add_node("generate_unsure_response", generate_unsure_response)
 builder.add_node("run_search", run_search)
 builder.add_node("create_recap_prompt", create_recap_prompt)
 builder.add_node("create_foresight_prompt", create_foresight_prompt)
-builder.add_node(
-    "generate_deterministic_serped_response",
-    generate_deterministic_serped_response
-)
-builder.add_node(
-    "generate_creative_serped_response",
-    generate_creative_serped_response
-)
+builder.add_node("create_general_prompt", create_general_prompt)
+builder.add_node("generate_unsure_prompt", generate_unsure_prompt)
 
 # Add edges
 builder.add_edge(START, "input_handler")
 builder.add_conditional_edges("input_handler", query_router)
 builder.add_edge("create_recap_query", "run_search")
 builder.add_edge("create_foresight_query", "run_search")
-builder.add_edge("create_general_prompt", "generate_general_response")
-builder.add_edge("generate_general_response", END)
-builder.add_edge("generate_unsure_response", END)
 builder.add_conditional_edges("run_search", response_router)
-builder.add_edge("create_recap_prompt", "generate_deterministic_serped_response")
-builder.add_edge("create_foresight_prompt", "generate_creative_serped_response")
-builder.add_edge("generate_deterministic_serped_response", END)
-builder.add_edge("generate_creative_serped_response", END)
+builder.add_edge("create_recap_prompt", END)
+builder.add_edge("create_foresight_prompt", END)
+builder.add_edge("create_general_prompt", END)
+builder.add_edge("generate_unsure_prompt", END)
 
 # Compile graph
 graph = builder.compile()
 
 # API chat endpoint
-@app.post("/api/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest) -> ChatResponse:
+@app.post("/api/chat")
+async def chat(request: ChatRequest):
     # Initialize conversation state based on incoming API request
     state = {
         "messages": [HumanMessage(content=request.message)],
@@ -236,5 +199,12 @@ async def chat(request: ChatRequest) -> ChatResponse:
         traceback.print_exc()
         return ChatResponse(response="Hmm, something went wrong.")
                 
-    # Return the last message in the state (the AI response)
-    return ChatResponse(response=result["messages"][-1].content)
+    # Return the last message in the state (LLM prompt)
+    final_prompt = result["messages"][-1].content
+
+    async def gen():
+        llm = ChatOpenAI(model="gpt-4o", streaming=True)
+        for chunk in llm.stream([HumanMessage(content=final_prompt)]):
+            yield chunk.content
+
+    return StreamingResponse(gen(), media_type="text/plain")
