@@ -3,5 +3,6 @@ uvicorn
 python-dotenv
 langchain-core
 langchain-openai
+langchain-community
 langgraph
 openai
