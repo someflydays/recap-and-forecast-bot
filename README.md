@@ -132,7 +132,7 @@ Given this project's need for speed and focus on backend development, I prioriti
 23. Prepare Docker images for deployment
 
 ## Design Decisions
-- I havn't yet set up the langgraph-sdk to stream tokens directly from my graph, so I decided that my graph would return a final prompt which then gets invoked and streamed to the UI from outside of the graph.
+- I haven't yet set up the langgraph-sdk to stream tokens directly from my graph, so I decided that my graph would return a final prompt which then gets invoked and streamed to the UI from outside of the graph.
 - I decided to instantiate a new model within each node, for more control over applying the right models to the right tasks.
 - For internal communication between LLMs and for deterministic reporting of web-search results, I opted for a fast model with low temperature settings (OpenAI's 4o-mini).
 - For speculative reporting on web-search results, I raised the model's temperature settings.
