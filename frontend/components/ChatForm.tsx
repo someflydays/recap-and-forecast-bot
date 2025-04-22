@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 const ChatForm = () => {
   const [message, setMessage] = useState("");
@@ -65,7 +66,7 @@ const ChatForm = () => {
       {response && (
         <div className="mt-6 p-4 border rounded bg-gray-50">
           <p className="font-semibold">Response:</p>
-          <p>{response}</p>
+          <ReactMarkdown>{response}</ReactMarkdown>
         </div>
       )}
     </div>
