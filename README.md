@@ -9,6 +9,7 @@ recap-and-forecast-bot/
             chatbot.py
         Dockerfile
         requirements.txt
+	.pre-commit-config.yaml
         README.md
     frontend/
         app/
