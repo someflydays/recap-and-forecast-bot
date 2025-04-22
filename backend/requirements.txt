@@ -7,3 +7,8 @@ langchain-community
 langgraph
 openai
 typing-extensions
+
+# For Black (Python formatter)
+pre-commit==2.20.0
+black==23.9.1
+flake8==6.1.0
