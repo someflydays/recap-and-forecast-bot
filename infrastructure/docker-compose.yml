@@ -7,6 +7,7 @@ services:
       - ../backend/.env     # Load environment vars
 
   frontend:
+    platform: linux/amd64   # Cross-build for linux/amd64
     build:
       context: ../frontend  # Build frontend Docker image
     ports:
