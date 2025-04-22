@@ -10,7 +10,6 @@ recap-and-forecast-bot/
         Dockerfile
         requirements.txt
 	.pre-commit-config.yaml
-        README.md
     frontend/
         app/
             globals.css
@@ -25,7 +24,6 @@ recap-and-forecast-bot/
         package-lock.json
         next-env.d.ts
         tsconfig.json
-        README.md
     infrastructure/
         docker-compose.yml
     .gitignore
@@ -57,14 +55,34 @@ docker compose --file infrastructure/docker-compose.yml up --build
 
 If you would like to spin up the backend and frontend for development, run the following commands sequentially:
 
-1. From the `recap-and-forecast-bot/backend/` directory
+1. Create and activate a venv (optional, but recommended):
+```
+python -m venv venv
+```
+```
+source venv/bin/activate
+```
+
+2. Install dependencies by running this command from the `recap-and-forecast-bot/` directory:
+```
+pip install -r backend/requirements.txt
+```
+
+3. Start the backend by running this command from the `recap-and-forecast-bot/backend/` directory
 ```
 uvicorn app.chatbot:app --reload
 ```
 Then navigate to http://localhost:8000 in a browser to access the backend.
 
-2. From the `recap-and-forecast-bot/frontend/` directory:
+4. Start the frontend by running this command from the `recap-and-forecast-bot/frontend/` directory:
 ```
 npm run dev
 ```
 Then navigate to http://localhost:3000 in a browser to access the frontend.
+
+5. Enable a Git hook for pre-commit linting by running this command from the `recap-and-forecast-bot/backend/` directory (optional):
+```
+pre-commit install
+
+```
+
