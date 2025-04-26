@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from langchain_community.tools.tavily_search import TavilySearchResults
 import traceback
 from datetime import datetime
+from IPython.display import Image, display
 
 # Load API keys from recap-and-forecast-bot/backend/.env
 load_dotenv()
@@ -244,6 +245,8 @@ builder.add_edge("generate_unsure_prompt", END)
 # Compile graph
 graph = builder.compile()
 
+# Display the graph structure in the console
+display(Image(react_graph.get_graph(xray=True).draw_mermaid_png()))
 
 # API chat endpoint
 @app.post("/api/chat")
