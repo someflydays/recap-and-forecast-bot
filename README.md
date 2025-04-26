@@ -8,9 +8,11 @@ This application searches the internet for information about a user-specified to
 
 <br>
 
+```
 Topic = Hockey
 Mode = Recap
 Timeframe = This month
+```
 
 <br>
 
@@ -18,9 +20,11 @@ Timeframe = This month
  
 <br>
 
+```
 Topic = GPU market
 Mode = Foresight
 Timeframe = This week
+```
 
 <br>
 
