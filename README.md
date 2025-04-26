@@ -1,5 +1,24 @@
 # Recap and Forecast Bot
 
+This application searches the internet for information about a user-specified topic. Based on the search results, the application generates a report that either summarizes recent events or speculates on future events.
+
+<br>
+**Example user input:**
+
+<br>
+Topic = Hockey
+Mode = Recap
+Timeframe = This month
+
+<br>
+**Example user input:**
+ 
+<br>
+Topic = GPU market
+Mode = Foresight
+Timeframe = This week
+
+<br>
 ## Repository Structure
 
 ```

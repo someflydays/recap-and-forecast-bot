@@ -13,7 +13,7 @@ from langchain_community.tools.tavily_search import TavilySearchResults
 import traceback
 from datetime import datetime
 
-# Load API keys
+# Load API keys from recap-and-forecast-bot/backend/.env
 load_dotenv()
 
 # Instantiate FastAPI app
@@ -27,10 +27,10 @@ app.add_middleware(
 )
 
 
-# Define API request schema
+# Define API request schema, validated with Pydantic
 class ChatRequest(BaseModel):
     message: str
-    mode: str  # "recap", "foresight", "general"
+    mode: str  # "recap", "foresight", or "general"
     timeframe: str  # "today", "this week", etc.
 
 
@@ -56,6 +56,7 @@ class MessagesState(args):
 
 
 def input_handler(state: MessagesState) -> MessagesState:
+    # Sentiment analysis
     system_instruction = "You are a topic extractor. The user has been asked to specify a topic. Your goal is to analyze the user's input and identify the topic that they are trying to specify. Based on the user's input, extract the topic that they most likely are trying to specify. Consider that they might make a typo, so if the input is not grammatically correct, then try to understand what they meant to say. Output the extracted topic as concisely as possible, and do not output anything else. If the user does not seem to be trying to specify any topic, then output one word: unclear"
     full_prompt = (
         (system_instruction)
@@ -264,6 +265,7 @@ async def chat(request: ChatRequest):
     # Return the last message in the state (LLM prompt)
     final_prompt = result["messages"][-1].content
 
+    # Invoke prompt and stream tokens to the UI
     async def gen():
         llm = ChatOpenAI(model="gpt-4o", streaming=True)
         try:
