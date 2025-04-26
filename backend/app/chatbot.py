@@ -175,7 +175,7 @@ def create_recap_prompt(state: MessagesState) -> MessagesState:
         + ((datetime.now().date()).strftime("%B %d, %Y"))
         + ("\n\nHere are the search results from the SERP tool:\n\n")
         + state["messages"][-1].content
-        + ("\n\n\nGenerate your prompt.\n\n")
+        + ("\n\n\nNow construct your prompt.\n\n")
     )
     llm = ChatOpenAI(model="gpt-4o", temperature=0.1)  # Fast, flexible
     response = llm.invoke([full_prompt])
@@ -190,7 +190,7 @@ def create_foresight_prompt(state: MessagesState) -> MessagesState:
         + "A user has specified a topic, a timeframe, and today's date.\nFor example: {'topic': 'AI', 'timeframe': 'this week', 'date': 'April 21, 2025'}.\n\n"
         + "The user's input has been passed to a SERP tool, which searched the web for news/events/stories/breakthroughs/info about that topic, with the goal of gathering enough relevant information to formulate credible speculative insights about what will likely happen during the specified timeframe (relative to today's date).\n\n"
         + "For example: if the user's input was {'topic': 'AI', 'timeframe': 'this week', 'date': 'April 21, 2025'}, then the SERP tool searched the web for news/stories/events/articles about AI with the goal of eventually using that information for trend analysis to generate a report about specific things that will happen regarding AI this week (with sources), and credible speculative ideas about what is likely to happen regarding AI this week (with reasoning).\n\n"
-        + "You will be given the SERP tool's search results, and you need to write a prompt that tells the LLM to generate this report. Each deterministic upcoming event in the report should include a bold title, a one-sentence summary, a link to the relevant search result (as a clickable, italicized hyperlink), and a new line between each of those sections. Each prediction in the report should include a bold title, a concise summary, a justification section where the user can see exactly why this insight has been predicted, and a new line between each of those sections. There should be no main title of the report, and tell the LLM to not output anything other than the report. Focus on readability and formatting. Avoid truncating anything - generate your own summary or title. Add a two new lines to separate each result. Use your best prompt engineering skills to construct your prompt for the LLM."
+        + "You will be given the SERP tool's search results, and you need to write a prompt that tells the LLM to generate this report. Each deterministic upcoming event in the report should include a bold title, a one-sentence summary, a link to the relevant search result (as a clickable, italicized hyperlink), and a new line between each of those sections. Each prediction in the report should include a bold title, a concise summary, a justification section where the user can see exactly why this insight has been predicted, and a new line between each of those sections. There should be no main title of the report, and tell the LLM to not output anything other than the report. Tell the LLM to focus on report readability and formatting. Avoid truncating anything - generate your own summary or title. Add a two new lines to separate each result. Use your best prompt engineering skills to construct your prompt for the LLM."
     )
     full_prompt = (
         (system_instruction)
@@ -202,7 +202,7 @@ def create_foresight_prompt(state: MessagesState) -> MessagesState:
         + ((datetime.now().date()).strftime("%B %d, %Y"))
         + ("\n\nHere are the search results from the SERP tool:\n\n")
         + state["messages"][-1].content
-        + ("\n\nGenerate your prompt.\n\n")
+        + ("\n\nNow construct your prompt.\n\n")
     )
     llm = ChatOpenAI(model="gpt-4o", temperature=0.1)  # Fast, flexible
     response = llm.invoke([full_prompt])
@@ -247,6 +247,7 @@ graph = builder.compile()
 
 # Display the graph structure in the console
 display(Image(react_graph.get_graph(xray=True).draw_mermaid_png()))
+
 
 # API chat endpoint
 @app.post("/api/chat")
