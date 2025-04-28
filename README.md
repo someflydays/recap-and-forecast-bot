@@ -109,27 +109,20 @@ source venv/bin/activate
 pip install -r backend/requirements.txt
 ```
 
-3. Start the graph server by running these commands from the `recap-and-forecast-bot/infrastructure/` directory:
+3. Start the FastAPI backend by running this command from the `recap-and-forecast-bot/backend/` directory
 ```
-docker compose build graph
-docker compose up -d graph
+uvicorn app.chatbot:app --reload --host 0.0.0.0 --port 8000
 ```
-Then navigate to http://localhost:8001 in a browser to explore the graph API.
+Then navigate to http://localhost:8000/api/chat in a browser to access the backend.
 
-4. Start the FastAPI backend by running this command from the `recap-and-forecast-bot/backend/` directory
-```
-uvicorn app.chatbot:app --reload
-```
-Then navigate to http://localhost:8000 in a browser to access the backend.
-
-5. Start the frontend by running these commands from the `recap-and-forecast-bot/frontend/` directory:
+4. Start the frontend by running these commands from the `recap-and-forecast-bot/frontend/` directory:
 ```
 npm install
 npm run dev
 ```
 Then navigate to http://localhost:3000 in a browser to access the frontend.
 
-6. (OPTIONAL) Enable a Git hook for pre-commit Python linting by running this command from the `recap-and-forecast-bot/backend/` directory:
+5. (OPTIONAL) Enable a Git hook for pre-commit Python linting by running this command from the `recap-and-forecast-bot/backend/` directory:
 ```
 pre-commit install
 ```
