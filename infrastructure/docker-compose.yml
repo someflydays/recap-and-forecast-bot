@@ -1,24 +1,13 @@
 services:
-  graph:
-    build:
-      context: ../backend
-      dockerfile: Dockerfile.graph
-    ports:
-      - "8001:8001"         # Expose port 8001
-    env_file:
-      - ../backend/.env     # Load environment vars
-
   backend:
     build:
       context: ../backend
-      dockerfile: Dockerfile.backend
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"         # Expose port 8000
-    depends_on:
-      - graph
+    depends_on: []
     env_file:
       - ../backend/.env     # Load environment vars
-
 
   frontend:
     platform: linux/amd64   # Cross-build for linux/amd64
