@@ -1,14 +1,26 @@
 services:
+  graph:
+    image: langgraph-server:local
+    ports:
+      - "8001:8000"
+    env_file:
+      - ../backend/.env     # Load environment vars
+
   backend:
     build: ../backend       # Build backend Docker image
     ports:
       - "8000:8000"         # Expose port 8000
+    depends_on:
+      - graph
     env_file:
       - ../backend/.env     # Load environment vars
 
+
   frontend:
-    platform: linux/amd64   # Cross-build for linux/amd64
     build:
       context: ../frontend  # Build frontend Docker image
+      platform: linux/amd64 # Cross-build for linux/amd64
     ports:
       - "3000:3000"         # Expose port 3000
+    depends_on:
+      - backend
