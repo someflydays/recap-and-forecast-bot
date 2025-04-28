@@ -68,14 +68,8 @@ recap-and-forecast-bot/
 This project utilizes the OpenAI API, the LangSmith API, and the Tavily API. Please visit their websites to sign up for API keys, and store them as environment variables. You can do this by running the following commands from the project's root directory:
 ```
 mkdir -p ./backend && echo "OPENAI_API_KEY=your_api_key" > ./backend/.env
-```
-```
 echo "TAVILY_API_KEY=your_api_key" > ./backend/.env
-```
-```
 echo "LANGSMITH_API_KEY=your_api_key" > ./backend/.env
-```
-```
 echo "LANGSMITH_URL=http://localhost:8001" > ./backend/.env
 ```
 <br>
