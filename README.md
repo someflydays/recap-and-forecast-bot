@@ -37,6 +37,7 @@ recap-and-forecast-bot/
     backend/
         app/
             chatbot.py
+	langgraph.json
         Dockerfile
         requirements.txt
 	.pre-commit-config.yaml
