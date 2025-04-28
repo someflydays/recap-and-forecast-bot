@@ -65,12 +65,18 @@ recap-and-forecast-bot/
 ---
 ## Setup
 
-This project utilizes the OpenAI API and the Tavily API. Please visit their websites to sign up for API keys, and store them as environment variables. You can do this by running the following commands from the project's root directory:
+This project utilizes the OpenAI API, the Tavily API, and the LangSmith API. Please visit their websites to sign up for API keys, and store them as environment variables. You can do this by running the following commands from the project's root directory:
 ```
 mkdir -p ./backend && echo "OPENAI_API_KEY=your_api_key" > ./backend/.env
 ```
 ```
 echo "TAVILY_API_KEY=your_api_key" > ./backend/.env
+```
+```
+echo "LANGSMITH_API_URL=http://localhost:8001" > ./backend/.env
+```
+```
+echo "LANGSMITH_API_KEY=your_api_key" > ./backend/.env
 ```
 <br>
 
@@ -81,16 +87,18 @@ echo "TAVILY_API_KEY=your_api_key" > ./backend/.env
 
 > **Note:** Make sure to have [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
 
-From the project's root directory, run the following command:
+From the project's root directory, run the following commands:
 ```
-docker compose --file infrastructure/docker-compose.yml up --build
+docker compose -f infrastructure/docker-compose.yml down --rmi all --volumes
+docker compose -f infrastructure/docker-compose.yml build --no-cache
+docker compose -f infrastructure/docker-compose.yml up
 ```
 
 ### Option 2: Local Development
 
 If you would like to spin up the backend and frontend for development, run the following commands sequentially:
 
-1. Create and activate a venv (optional, but recommended):
+1. Create and activate a venv in the project root (optional, but recommended):
 ```
 python -m venv venv
 ```
@@ -103,19 +111,28 @@ source venv/bin/activate
 pip install -r backend/requirements.txt
 ```
 
-3. Start the backend by running this command from the `recap-and-forecast-bot/backend/` directory
+3. Start the LangGraph server by running these commands from the `recap-and-forecast-bot/backend/` directory:
 ```
-uvicorn app.chatbot:app --reload
+uvicorn -m langgraph_server.main:app \
+  --reload --host 0.0.0.0 --port 8001
+``` 
+Then navigate to http://localhost:8001 in a browser to access the graph API.
+
+4. Start the FastAPI backend by running this command from the `recap-and-forecast-bot/backend/` directory:
+```
+uvicorn app.chatbot:app \
+  --reload --host 0.0.0.0 --port 8000
 ```
 Then navigate to http://localhost:8000 in a browser to access the backend.
 
-4. Start the frontend by running this command from the `recap-and-forecast-bot/frontend/` directory:
+5. Start the frontend by running these commands from the `recap-and-forecast-bot/frontend/` directory:
 ```
+npm install
 npm run dev
 ```
 Then navigate to http://localhost:3000 in a browser to access the frontend.
 
-5. (OPTIONAL) Enable a Git hook for pre-commit Python linting by running this command from the `recap-and-forecast-bot/backend/` directory:
+6. (OPTIONAL) Enable a Git hook for pre-commit Python linting by running this command from the `recap-and-forecast-bot/backend/` directory:
 ```
 pre-commit install
 ```
