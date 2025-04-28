@@ -96,7 +96,7 @@ docker compose -f infrastructure/docker-compose.yml up
 
 ### Option 2: Local Development
 
-If you would like to spin up the backend and frontend for development, run the following commands sequentially:
+If you would like to spin up the individual servers for development, run the following commands sequentially:
 
 1. Create and activate a venv in the project root (optional, but recommended):
 ```
@@ -115,6 +115,7 @@ pip install -r backend/requirements.txt
 ```
 uvicorn -m langgraph_server.main:app \
   --reload --host 0.0.0.0 --port 8001
+  --config ./langgraph.json
 ``` 
 Then navigate to http://localhost:8001 in a browser to access the graph API.
 
