@@ -1,6 +1,6 @@
 # Recap and Forecast Bot
 
-This application searches the internet for information about the user's specified topic. Based on the search results, a report is generated that either summarizes the topic's recent events or speculates about potential future events.
+This application searches the internet for information about the user's specified topic. Based on the search results, a report is generated. The report either summarizes the topic's recent events or speculates about potential future events.
 
 
 <br>
