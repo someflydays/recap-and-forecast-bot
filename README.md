@@ -98,7 +98,7 @@ docker compose -f infrastructure/docker-compose.yml up
 
 If you would like to spin up the individual servers for development, run the following commands sequentially:
 
-1. Create and activate a venv in the project root (optional, but recommended):
+1. Create and activate a venv (optional, but recommended):
 ```
 python -m venv venv
 ```
