@@ -161,6 +161,7 @@ Given this project's need for speed and focus on backend development, I prioriti
 17. Improve real-time status updates and loading indicators
 18. Refine README documentation
 19. Add pre-commit hook for Black to help lint my Python code
+20. Create langgraph.json and use langgraph-sdk to asynchronously stream tokens and status updates to the UI
 
 <br>
 
@@ -168,14 +169,12 @@ Given this project's need for speed and focus on backend development, I prioriti
 
 <br>
 
-20. Create langgraph.json and use langgraph-sdk to asynchronously stream tokens and status updates to the UI
 21. Prepare Docker images for deployment
 22. Set up LangGraph Studio or LangSmith
 23. Add RAG capabilities, conversation history, 3rd-party integrations
 
 ---
 ## Design Decisions
-- I haven't yet set up the langgraph-sdk to stream tokens directly from my graph. For now, the graph returns a final prompt which then gets invoked and streamed to the UI from outside of the graph.
 - For more control over applying the right model to each task, I decided to instantiate a new model within each node.
 - For internal communication between LLMs and for deterministic reporting of web-search results, I opted for a fast model (OpenAI's 4o-mini) with low temperature settings.
 - For making speculative predictions based on web-search results, I raised the model's temperature settings.
