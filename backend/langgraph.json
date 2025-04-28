@@ -1,42 +1,45 @@
 {
   "graphs": {
-    "graph_id": "recap-and-forecast-bot",
-    "description": "State graph for the Recap & Forecast Bot",
-    "entrypoint": "input_handler",
-    "nodes": [
-      { "name": "input_handler",        "handler": "input_handler" },
-      { "name": "create_recap_query",   "handler": "create_recap_query" },
-      { "name": "create_foresight_query","handler": "create_foresight_query" },
-      { "name": "create_general_prompt","handler": "create_general_prompt" },
-      { "name": "create_recap_prompt",  "handler": "create_recap_prompt" },
-      { "name": "create_foresight_prompt","handler": "create_foresight_prompt" },
-      { "name": "run_search",           "handler": "run_search" },
-      { "name": "generate_unsure_prompt","handler": "generate_unsure_prompt" }
-    ],
-    "edges": [
-      { "from": "START",                 "to": "input_handler" },
+    "recap-and-forecast-bot": {
+      "description": "State graph for the Recap & Forecast Bot",
+      "entrypoint": "input_handler",
+      "handlers_module": "app.chatbot",
 
-      { "from": "input_handler",         "to": "generate_unsure_prompt",
-        "condition": "query_router(state) == 'generate_unsure_prompt'" },
-      { "from": "input_handler",         "to": "create_recap_query",
-        "condition": "query_router(state) == 'create_recap_query'" },
-      { "from": "input_handler",         "to": "create_foresight_query",
-        "condition": "query_router(state) == 'create_foresight_query'" },
-      { "from": "input_handler",         "to": "create_general_prompt",
-        "condition": "query_router(state) == 'create_general_prompt'" },
+      "nodes": [
+        { "name": "input_handler",        "handler": "input_handler" },
+        { "name": "create_recap_query",   "handler": "create_recap_query" },
+        { "name": "create_foresight_query","handler": "create_foresight_query" },
+        { "name": "create_general_prompt","handler": "create_general_prompt" },
+        { "name": "create_recap_prompt",  "handler": "create_recap_prompt" },
+        { "name": "create_foresight_prompt","handler": "create_foresight_prompt" },
+        { "name": "run_search",           "handler": "run_search" },
+        { "name": "generate_unsure_prompt","handler": "generate_unsure_prompt" }
+      ],
+      "edges": [
+        { "from": "START",                 "to": "input_handler" },
 
-      { "from": "create_recap_query",    "to": "run_search" },
-      { "from": "create_foresight_query","to": "run_search" },
+        { "from": "input_handler",         "to": "generate_unsure_prompt",
+          "condition": "query_router(state) == 'generate_unsure_prompt'" },
+        { "from": "input_handler",         "to": "create_recap_query",
+          "condition": "query_router(state) == 'create_recap_query'" },
+        { "from": "input_handler",         "to": "create_foresight_query",
+          "condition": "query_router(state) == 'create_foresight_query'" },
+        { "from": "input_handler",         "to": "create_general_prompt",
+          "condition": "query_router(state) == 'create_general_prompt'" },
 
-      { "from": "run_search",            "to": "create_recap_prompt",
-        "condition": "response_router(state) == 'create_recap_prompt'" },
-      { "from": "run_search",            "to": "create_foresight_prompt",
-        "condition": "response_router(state) == 'create_foresight_prompt'" },
+        { "from": "create_recap_query",    "to": "run_search" },
+        { "from": "create_foresight_query","to": "run_search" },
 
-      { "from": "create_recap_prompt",   "to": "END" },
-      { "from": "create_foresight_prompt","to": "END" },
-      { "from": "create_general_prompt", "to": "END" },
-      { "from": "generate_unsure_prompt","to": "END" }
-    ]
+        { "from": "run_search",            "to": "create_recap_prompt",
+          "condition": "response_router(state) == 'create_recap_prompt'" },
+        { "from": "run_search",            "to": "create_foresight_prompt",
+          "condition": "response_router(state) == 'create_foresight_prompt'" },
+
+        { "from": "create_recap_prompt",   "to": "END" },
+        { "from": "create_foresight_prompt","to": "END" },
+        { "from": "create_general_prompt", "to": "END" },
+        { "from": "generate_unsure_prompt","to": "END" }
+      ]
+    }
   }
 }
