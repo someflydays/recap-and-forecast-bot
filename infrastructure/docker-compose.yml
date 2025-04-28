@@ -2,7 +2,7 @@ services:
   graph:
     image: langgraph-server:local
     ports:
-      - "8001:8000"
+      - "8001:8001"         # Expose port 8001
     env_file:
       - ../backend/.env     # Load environment vars
 
