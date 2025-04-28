@@ -37,10 +37,11 @@ recap-and-forecast-bot/
     backend/
         app/
             chatbot.py
-	langgraph.json
-        Dockerfile
+        Dockerfile.graph
+        Dockerfile.backend
         requirements.txt
 	.pre-commit-config.yaml
+        langgraph.json
     frontend/
         app/
             globals.css
@@ -65,7 +66,7 @@ recap-and-forecast-bot/
 ---
 ## Setup
 
-This project utilizes the OpenAI API, the Tavily API, and the LangSmith API. Please visit their websites to sign up for API keys, and store them as environment variables. You can do this by running the following commands from the project's root directory:
+This project utilizes the OpenAI API, the LangSmith API, and the Tavily API. Please visit their websites to sign up for API keys, and store them as environment variables. You can do this by running the following commands from the project's root directory:
 ```
 mkdir -p ./backend && echo "OPENAI_API_KEY=your_api_key" > ./backend/.env
 ```
@@ -73,19 +74,19 @@ mkdir -p ./backend && echo "OPENAI_API_KEY=your_api_key" > ./backend/.env
 echo "TAVILY_API_KEY=your_api_key" > ./backend/.env
 ```
 ```
-echo "LANGSMITH_API_URL=http://localhost:8001" > ./backend/.env
-```
-```
 echo "LANGSMITH_API_KEY=your_api_key" > ./backend/.env
+```
+```
+echo "LANGSMITH_URL=http://localhost:8001" > ./backend/.env
 ```
 <br>
 
 ---
 ## Running the App
 
-### Option 1: Simplest Procedure
-
 > **Note:** Make sure to have [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+
+### Option 1: Simplest Procedure
 
 From the project's root directory, run the following commands:
 ```
@@ -96,7 +97,7 @@ docker compose -f infrastructure/docker-compose.yml up
 
 ### Option 2: Local Development
 
-If you would like to spin up the individual servers for development, run the following commands sequentially:
+If you would like to spin up the application for development, run the following commands sequentially:
 
 1. Create and activate a venv (optional, but recommended):
 ```
@@ -109,16 +110,16 @@ source venv/bin/activate
 pip install -r backend/requirements.txt
 ```
 
-3. Start the LangGraph server by running this command from the `recap-and-forecast-bot/infrastructure/` directory:
+3. Start the graph server by running these commands from the `recap-and-forecast-bot/infrastructure/` directory:
 ```
-docker compose up graph
-``` 
-Then navigate to http://localhost:8001 in a browser to access the graph API.
+docker compose build graph
+docker compose up -d graph
+```
+Then navigate to http://localhost:8001 in a browser to explore the graph API.
 
-4. Start the FastAPI backend by running this command from the `recap-and-forecast-bot/backend/` directory:
+4. Start the FastAPI backend by running this command from the `recap-and-forecast-bot/backend/` directory
 ```
-uvicorn app.chatbot:app \
-  --reload --host 0.0.0.0 --port 8000
+uvicorn app.chatbot:app --reload
 ```
 Then navigate to http://localhost:8000 in a browser to access the backend.
 
@@ -209,3 +210,4 @@ I used ChatGPT for help with:
 
 I used Cursor IDE for:
 - Development and debugging
+
