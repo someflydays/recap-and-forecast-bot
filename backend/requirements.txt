@@ -4,10 +4,10 @@ python-dotenv
 langchain
 langchain-openai
 langchain-community
-langgraph
+langgraph-sdk
 openai
 typing-extensions
 
-# For Black (Python formatter)
+# For Black (Python linter)
 pre-commit==2.20.0
 black==25.1.0
