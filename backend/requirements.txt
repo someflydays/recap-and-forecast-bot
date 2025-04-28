@@ -5,7 +5,6 @@ langchain
 langchain-openai
 langchain-community
 langgraph-sdk
-langgraph-server
 openai
 typing-extensions
 
