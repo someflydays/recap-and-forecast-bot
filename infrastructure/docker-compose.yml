@@ -1,19 +1,17 @@
 services:
   graph:
-    image: langgraph-server:local
-    volumes:
-      - ../backend/langgraph.json:/app/langgraph.json:ro
-    command: >
-      uvicorn -m langgraph_server.main:app
-      --reload --host 0.0.0.0 --port 8001
-      --config /app/langgraph.json
+    build:
+      context: ../backend
+      dockerfile: Dockerfile.graph
     ports:
       - "8001:8001"         # Expose port 8001
     env_file:
       - ../backend/.env     # Load environment vars
 
   backend:
-    build: ../backend       # Build backend Docker image
+    build:
+      context: ../backend
+      dockerfile: Dockerfile.backend
     ports:
       - "8000:8000"         # Expose port 8000
     depends_on:
