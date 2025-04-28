@@ -83,7 +83,7 @@ echo "LANGSMITH_API_KEY=your_api_key" > ./backend/.env
 ---
 ## Running the App
 
-### Option 1: Using Docker
+### Option 1: Simplest Procedure
 
 > **Note:** Make sure to have [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
 
@@ -101,8 +101,6 @@ If you would like to spin up the individual servers for development, run the fol
 1. Create and activate a venv (optional, but recommended):
 ```
 python -m venv venv
-```
-```
 source venv/bin/activate
 ```
 
@@ -111,11 +109,9 @@ source venv/bin/activate
 pip install -r backend/requirements.txt
 ```
 
-3. Start the LangGraph server by running these commands from the `recap-and-forecast-bot/backend/` directory:
+3. Start the LangGraph server by running this command from the `recap-and-forecast-bot/infrastructure/` directory:
 ```
-uvicorn -m langgraph_server.main:app \
-  --reload --host 0.0.0.0 --port 8001
-  --config ./langgraph.json
+docker compose up graph
 ``` 
 Then navigate to http://localhost:8001 in a browser to access the graph API.
 
