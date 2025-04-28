@@ -12,9 +12,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from langchain_community.tools.tavily_search import TavilySearchResults
 import traceback
 from datetime import datetime
+import os
+from langgraph_sdk import get_client
 
 # Load API keys from recap-and-forecast-bot/backend/.env
 load_dotenv()
+GRAPH_URL = os.getenv("LANGSMITH_API_URL")
+GRAPH_KEY = os.getenv("LANGSMITH_API_KEY")
+
 
 # Instantiate FastAPI app
 app = FastAPI()
@@ -73,7 +78,7 @@ def input_handler(state: MessagesState) -> MessagesState:
 def query_router(state: MessagesState) -> str:
     topic = state.get("topic")
     if topic == "unclear":
-        return "generate_unsure_prompt"
+        return "create_unsure_prompt"
     else:
         mode = state.get("mode")
         if mode == "recap":
@@ -210,10 +215,23 @@ def create_foresight_prompt(state: MessagesState) -> MessagesState:
     return state
 
 
-def generate_unsure_prompt(state: MessagesState) -> MessagesState:
+def create_unsure_prompt(state: MessagesState) -> MessagesState:
     system_instruction = "Please tell the user that you are unsure what topic they are trying to specify, and suggest that they specify a topic in the text box. Do not output anything other than your message to the user."
     system_message = SystemMessage(content=(system_instruction))
     state["messages"].append(system_message)
+    return state
+
+
+def generate_final_response(state: MessagesState) -> MessagesState:
+    prompt = state["messages"][-1].content
+    mode = state.get("mode")
+    if mode == "foresight":
+        llm = ChatOpenAI(model="gpt-4o", streaming=True, temperature=0.4)
+    else:
+        llm = ChatOpenAI(model="gpt-4o", streaming=True, temperature=0)
+    response = llm.invoke([prompt])
+    ai_message = AIMessage(content=response.content)
+    state["messages"].append(ai_message)
     return state
 
 
@@ -228,7 +246,8 @@ builder.add_node("run_search", run_search)
 builder.add_node("create_recap_prompt", create_recap_prompt)
 builder.add_node("create_foresight_prompt", create_foresight_prompt)
 builder.add_node("create_general_prompt", create_general_prompt)
-builder.add_node("generate_unsure_prompt", generate_unsure_prompt)
+builder.add_node("create_unsure_prompt", create_unsure_prompt)
+builder.add_node("generate_final_response", generate_final_response)
 
 # Add edges
 builder.add_edge(START, "input_handler")
@@ -236,10 +255,11 @@ builder.add_conditional_edges("input_handler", query_router)
 builder.add_edge("create_recap_query", "run_search")
 builder.add_edge("create_foresight_query", "run_search")
 builder.add_conditional_edges("run_search", response_router)
-builder.add_edge("create_recap_prompt", END)
-builder.add_edge("create_foresight_prompt", END)
-builder.add_edge("create_general_prompt", END)
-builder.add_edge("generate_unsure_prompt", END)
+builder.add_edge("create_recap_prompt", "generate_final_response")
+builder.add_edge("create_foresight_prompt", "generate_final_response")
+builder.add_edge("create_general_prompt", "generate_final_response")
+builder.add_edge("create_unsure_prompt", "generate_final_response")
+builder.add_edge("generate_final_response", END)
 
 # Compile graph
 graph = builder.compile()
@@ -248,31 +268,30 @@ graph = builder.compile()
 # API chat endpoint
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
+    # Create LangSmith API client
+    client = get_client(url=GRAPH_URL, api_key=GRAPH_KEY)
+
+    # Create a fresh thread (per request)
+    thread = await client.threads.create()
+
     # Initialize conversation state based on incoming API request
-    state = {
+    input_state = {
         "messages": [HumanMessage(content=request.message)],
         "mode": request.mode,
         "timeframe": request.timeframe,
     }
-    try:
-        # Invoke the graph
-        result = graph.invoke(state)
-    except Exception as e:
-        print("ERROR INVOKING GRAPH:")
-        traceback.print_exc()
-        return ChatResponse(response="Hmm, something went wrong.")
 
-    # Return the last message in the state (LLM prompt)
-    final_prompt = result["messages"][-1].content
+    # Stream tokens and metadata objects
+    async def event_stream():
+        async for ev in client.runs.stream(
+            thread_id=thread["thread_id"],
+            assistant_id="recap-and-forecast-bot",
+            input=input_state,
+            stream_mode="messages-tuple",
+        ):
+            if ev.event == "messages":
+                for msg in ev.data:
+                    if msg["type"] == "AIMessageChunk":
+                        yield msg["content"]
 
-    # Invoke prompt and stream tokens to the UI
-    async def gen():
-        llm = ChatOpenAI(model="gpt-4o", streaming=True)
-        try:
-            for chunk in llm.stream([HumanMessage(content=final_prompt)]):
-                yield chunk.content
-        except (BrokenPipeError, asyncio.CancelledError):
-            # Silently stop if the user cancels the request
-            return
-
-    return StreamingResponse(gen(), media_type="text/plain")
+    return StreamingResponse(event_stream(), media_type="text/plain")

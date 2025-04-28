@@ -13,14 +13,15 @@
         { "name": "create_recap_prompt",    "handler": "create_recap_prompt" },
         { "name": "create_foresight_prompt","handler": "create_foresight_prompt" },
         { "name": "run_search",             "handler": "run_search" },
-        { "name": "generate_unsure_prompt", "handler": "generate_unsure_prompt" }
+        { "name": "create_unsure_prompt",   "handler": "create_unsure_prompt" },
+        { "name": "generate_final_response","handler": "generate_final_response" }
       ],
 
       "edges": [
         { "from": "START",                   "to": "input_handler" },
 
-        { "from": "input_handler",           "to": "generate_unsure_prompt",
-          "condition": "query_router(state) == 'generate_unsure_prompt'" },
+        { "from": "input_handler",           "to": "create_unsure_prompt",
+          "condition": "query_router(state) == 'create_unsure_prompt'" },
         { "from": "input_handler",           "to": "create_recap_query",
           "condition": "query_router(state) == 'create_recap_query'" },
         { "from": "input_handler",           "to": "create_foresight_query",
@@ -36,10 +37,12 @@
         { "from": "run_search",              "to": "create_foresight_prompt",
           "condition": "response_router(state) == 'create_foresight_prompt'" },
 
-        { "from": "create_recap_prompt",     "to": "END" },
-        { "from": "create_foresight_prompt", "to": "END" },
-        { "from": "create_general_prompt",   "to": "END" },
-        { "from": "generate_unsure_prompt",  "to": "END" }
+        { "from": "create_recap_prompt",     "to": "generate_final_response" },
+        { "from": "create_foresight_prompt", "to": "generate_final_response" },
+        { "from": "create_general_prompt",   "to": "generate_final_response" },
+        { "from": "create_unsure_prompt",    "to": "generate_final_response" },
+
+        { "from": "generate_final_response", "to": "END" }
       ]
     }
   }
