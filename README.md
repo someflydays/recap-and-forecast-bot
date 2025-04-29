@@ -105,7 +105,7 @@ pip install -r backend/requirements.txt
 
 3. Start the LangGraph API server by running this command from the `recap-and-forecast-bot/backend/` directory:
 ```
-langgraph dev --port 2025 --host 0.0.0.0
+langgraph dev --port 8001 --host 0.0.0.0
 ```
 Then navigate to https://smith.langchain.com/studio/?baseURL=http://localhost:2025 in a browser to access the LangGraph Studio IDE.
 
