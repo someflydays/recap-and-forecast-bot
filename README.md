@@ -103,20 +103,28 @@ source venv/bin/activate
 pip install -r backend/requirements.txt
 ```
 
-3. Start the FastAPI backend by running this command from the `recap-and-forecast-bot/backend/` directory
+3. Start the LangGraph API server by running this command from the `recap-and-forecast-bot/backend/` directory:
+```
+langgraph dev --port 2025 --host 0.0.0.0
+```
+Then navigate to https://smith.langchain.com/studio/?baseURL=http://localhost:2025 in a browser to access the LangGraph Studio IDE.
+
+> **Note:** Use Chrome, Edge, or Firefox for accessing LangGraph Studio. Using Safari is not supported.
+
+4. Start the FastAPI backend by running this command from the `recap-and-forecast-bot/backend/` directory:
 ```
 uvicorn app.chatbot:app --reload --host 0.0.0.0 --port 8000
 ```
 Then navigate to http://localhost:8000/api/chat in a browser to access the backend.
 
-4. Start the frontend by running these commands from the `recap-and-forecast-bot/frontend/` directory:
+5. Start the frontend by running these commands from the `recap-and-forecast-bot/frontend/` directory:
 ```
 npm install
 npm run dev
 ```
 Then navigate to http://localhost:3000 in a browser to access the frontend.
 
-5. (OPTIONAL) Enable a Git hook for pre-commit Python linting by running this command from the `recap-and-forecast-bot/backend/` directory:
+6. (OPTIONAL) Enable a Git hook for pre-commit Python linting by running this command from the `recap-and-forecast-bot/backend/` directory:
 ```
 pre-commit install
 ```
