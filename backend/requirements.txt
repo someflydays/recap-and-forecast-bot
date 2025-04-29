@@ -8,6 +8,7 @@ langchain-openai
 langchain-community
 langgraph
 langgraph-sdk
+langgraph-cli[inmem]
 openai
 typing-extensions
 
