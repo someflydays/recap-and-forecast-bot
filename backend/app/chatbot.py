@@ -3,11 +3,9 @@ from dotenv import load_dotenv
 from datetime import datetime
 from typing_extensions import TypedDict
 from typing import Annotated
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-
 from langchain_core.messages import (
     HumanMessage,
     AIMessage,
@@ -20,7 +18,6 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langgraph_sdk import get_client
-
 from pydantic import BaseModel
 
 
