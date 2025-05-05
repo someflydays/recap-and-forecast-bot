@@ -109,7 +109,7 @@ pip install -r backend/requirements.txt
 langgraph dev --port 8001 --host 0.0.0.0
 ```
 
-    Then navigate to https://smith.langchain.com/studio/?baseURL=http://localhost:2025 in a browser to access the LangGraph Studio IDE.
+> Then navigate to https://smith.langchain.com/studio/?baseURL=http://localhost:2025 in a browser to access the LangGraph Studio IDE.
 
 > **Note:** Use Chrome, Edge, or Firefox for accessing LangGraph Studio. Using Safari is not supported.
 
@@ -118,7 +118,7 @@ langgraph dev --port 8001 --host 0.0.0.0
 uvicorn app.chatbot:app --reload --host 0.0.0.0 --port 8000
 ```
 
-    Then navigate to http://localhost:8000/api/chat in a browser to access the backend.
+> Then navigate to http://localhost:8000/api/chat in a browser to access the backend.
 
 5. Start the frontend by running these commands from the `recap-and-forecast-bot/frontend/` directory:
 ```
@@ -126,7 +126,7 @@ npm install
 npm run dev
 ```
 
-    Then navigate to http://localhost:3000 in a browser to access the frontend.
+> Then navigate to http://localhost:3000 in a browser to access the frontend.
 
 6. (OPTIONAL) Enable a Git hook for pre-commit Python linting by running this command from the `recap-and-forecast-bot/backend/` directory:
 ```
