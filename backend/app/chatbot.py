@@ -59,16 +59,23 @@ class MessagesState(TypedDict):
     topic: str
 
 
-def load_prompt(file_path):
+# Create a function to load prompts from JSON files
+THIS_DIR = os.path.dirname(__file__)
+BACKEND_DIR = os.path.abspath(os.path.join(THIS_DIR, ".."))
+PROMPT_DIR = os.path.join(BACKEND_DIR, "prompts")
+
+
+def load_prompt(filename: str) -> dict:
+    file_path = os.path.join(PROMPT_DIR, filename)
     with open(file_path, "r") as file:
         return json.load(file)
 
 
 async def input_handler(state: MessagesState) -> MessagesState:
     # Sentiment analysis
-    system_instruction = load_prompt(
-        "../prompts/input_handler_system_instruction.json"
-    )["system_instruction"]
+    system_instruction = load_prompt("input_handler_system_instruction.json")[
+        "system_instruction"
+    ]
     full_prompt = (
         (system_instruction)
         + ("\n\nBased on the following user input:\n\n")
@@ -96,9 +103,9 @@ def query_router(state: MessagesState) -> str:
 
 
 async def create_general_prompt(state: MessagesState) -> MessagesState:
-    system_instruction = load_prompt(
-        "../prompts/create_general_prompt_system_instruction.json"
-    )["system_instruction"]
+    system_instruction = load_prompt("create_general_prompt_system_instruction.json")[
+        "system_instruction"
+    ]
     topic = state.get("topic")
     full_prompt = (
         (system_instruction)
@@ -114,9 +121,9 @@ async def create_general_prompt(state: MessagesState) -> MessagesState:
 
 
 async def create_recap_query(state: MessagesState) -> MessagesState:
-    system_instruction = load_prompt(
-        "../prompts/create_recap_query_system_instruction.json"
-    )["system_instruction"]
+    system_instruction = load_prompt("create_recap_query_system_instruction.json")[
+        "system_instruction"
+    ]
     full_prompt = (
         (system_instruction)
         + ("\n\nHere is the topic that the user specified:\n\n")
@@ -135,9 +142,9 @@ async def create_recap_query(state: MessagesState) -> MessagesState:
 
 
 async def create_forecast_query(state: MessagesState) -> MessagesState:
-    system_instruction = load_prompt(
-        "../prompts/create_forecast_query_system_instruction.json"
-    )["system_instruction"]
+    system_instruction = load_prompt("create_forecast_query_system_instruction.json")[
+        "system_instruction"
+    ]
     full_prompt = (
         (system_instruction)
         + ("\n\nHere is the topic that the user specified:\n\n")
@@ -175,9 +182,9 @@ def response_router(state: MessagesState) -> str:
 
 
 async def create_recap_prompt(state: MessagesState) -> MessagesState:
-    system_instruction = load_prompt(
-        "../prompts/create_recap_prompt_system_instruction.json"
-    )["system_instruction"]
+    system_instruction = load_prompt("create_recap_prompt_system_instruction.json")[
+        "system_instruction"
+    ]
     full_prompt = (
         (system_instruction)
         + ("\n\nHere is the topic that the user specified:\n\n")
@@ -198,9 +205,9 @@ async def create_recap_prompt(state: MessagesState) -> MessagesState:
 
 
 async def create_forecast_prompt(state: MessagesState) -> MessagesState:
-    system_instruction = load_prompt(
-        "../prompts/create_forecast_prompt_system_instruction.json"
-    )["system_instruction"]
+    system_instruction = load_prompt("create_forecast_prompt_system_instruction.json")[
+        "system_instruction"
+    ]
     full_prompt = (
         (system_instruction)
         + ("\n\nHere is the topic that the user specified:\n\n")
@@ -221,9 +228,9 @@ async def create_forecast_prompt(state: MessagesState) -> MessagesState:
 
 
 async def create_unsure_prompt(state: MessagesState) -> MessagesState:
-    system_instruction = load_prompt(
-        "../prompts/create_unsure_prompt_system_instruction.json"
-    )["system_instruction"]
+    system_instruction = load_prompt("create_unsure_prompt_system_instruction.json")[
+        "system_instruction"
+    ]
     system_message = SystemMessage(content=(system_instruction))
     state["messages"].append(system_message)
     return state
@@ -239,8 +246,6 @@ async def generate_final_response(state: MessagesState):
     # Generate final response
     print("Generating final response...")
     prompt = state["messages"][-1].content
-    # final_response = await llm.ainvoke([prompt])
-    # return {"messages": [final_response]}
     full = ""
     for chunk in await llm.ainvoke([prompt]):
         yield {"messages": [chunk]}
