@@ -23,7 +23,7 @@ Timeframe = This month
 
 ```
 Topic = GPU market
-Mode = Foresight
+Mode = Forecast
 Timeframe = This week
 ```
 
