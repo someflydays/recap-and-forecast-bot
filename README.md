@@ -93,18 +93,18 @@ docker compose -f infrastructure/docker-compose.yml up
 
 If you would like to spin up the application for development, run the following commands sequentially:
 
-1. Create and activate a venv (optional, but recommended):
+**1. Create and activate a venv (optional, but recommended):**
 ```
 python -m venv venv
 source venv/bin/activate
 ```
 
-2. Install dependencies by running this command from the `recap-and-forecast-bot/` directory:
+**2. Install dependencies by running this command from the `recap-and-forecast-bot/` directory:**
 ```
 pip install -r backend/requirements.txt
 ```
 
-3. Start the LangGraph API server by running this command from the `recap-and-forecast-bot/backend/` directory:
+**3. Start the LangGraph API server by running this command from the `recap-and-forecast-bot/backend/` directory:**
 ```
 langgraph dev --port 8001 --host 0.0.0.0
 ```
@@ -113,14 +113,14 @@ langgraph dev --port 8001 --host 0.0.0.0
 
 > **Note:** Use Chrome, Edge, or Firefox for accessing LangGraph Studio. Using Safari is not supported.
 
-4. Start the FastAPI backend by running this command from the `recap-and-forecast-bot/backend/` directory:
+**4. Start the FastAPI backend by running this command from the `recap-and-forecast-bot/backend/` directory:**
 ```
 uvicorn app.chatbot:app --reload --host 0.0.0.0 --port 8000
 ```
 
 > Then navigate to http://localhost:8000/api/chat in a browser to access the backend.
 
-5. Start the frontend by running these commands from the `recap-and-forecast-bot/frontend/` directory:
+**5. Start the frontend by running these commands from the `recap-and-forecast-bot/frontend/` directory:**
 ```
 npm install
 npm run dev
@@ -128,7 +128,7 @@ npm run dev
 
 > Then navigate to http://localhost:3000 in a browser to access the frontend.
 
-6. (OPTIONAL) Enable a Git hook for pre-commit Python linting by running this command from the `recap-and-forecast-bot/backend/` directory:
+**6. (OPTIONAL) Enable a Git hook for pre-commit Python linting by running this command from the `recap-and-forecast-bot/backend/` directory:**
 ```
 pre-commit install
 ```
