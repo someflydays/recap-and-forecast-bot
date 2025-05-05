@@ -41,7 +41,7 @@ app.add_middleware(
 # Define API request schema, validated with Pydantic
 class ChatRequest(BaseModel):
     message: str
-    mode: str  # "recap", "foresight", or "general"
+    mode: str  # "recap", "forecast", or "general"
     timeframe: str  # "today", "this week", ...
 
 
@@ -81,8 +81,8 @@ def query_router(state: MessagesState) -> str:
         mode = state.get("mode")
         if mode == "recap":
             return "create_recap_query"
-        elif mode == "foresight":
-            return "create_foresight_query"
+        elif mode == "forecast":
+            return "create_forecast_query"
         else:
             return "create_general_prompt"
 
@@ -122,7 +122,7 @@ async def create_recap_query(state: MessagesState) -> MessagesState:
     return state
 
 
-async def create_foresight_query(state: MessagesState) -> MessagesState:
+async def create_forecast_query(state: MessagesState) -> MessagesState:
     system_instruction = "You will be given a topic, a timeframe, and today's date. For example: {'topic': 'AI', 'timeframe': 'this week', 'date' : 'April 21, 2025'}\n\nYour goal is to generate a well-structured query for use in web-search, with the aim of finding the most impactful and most insightful information about what will most likely happen with the given topic during the given timeframe (relative to today's date). Your query should focus on finding upcoming events, news, or important things that are scheduled to happen during the given timeframe. Your query should also find key information that can later be used for trend analysis about what might happen regarding the topic in the given timeframe. Based on this goal, formulate a well-structured web-search query"
     full_prompt = (
         (system_instruction)
@@ -156,8 +156,8 @@ def response_router(state: MessagesState) -> str:
     mode = state.get("mode")
     if mode == "recap":
         return "create_recap_prompt"
-    elif mode == "foresight":
-        return "create_foresight_prompt"
+    elif mode == "forecast":
+        return "create_forecast_prompt"
 
 
 async def create_recap_prompt(state: MessagesState) -> MessagesState:
@@ -186,7 +186,7 @@ async def create_recap_prompt(state: MessagesState) -> MessagesState:
     return state
 
 
-async def create_foresight_prompt(state: MessagesState) -> MessagesState:
+async def create_forecast_prompt(state: MessagesState) -> MessagesState:
     system_instruction = (
         "You are a prompt engineer. An LLM will be invoked with the prompt that you create. Your job is to create a prompt based on given SERP results. Do not output anything other than your prompt.\n\n"
         + "A user has specified a topic, a timeframe, and today's date.\nFor example: {'topic': 'AI', 'timeframe': 'this week', 'date': 'April 21, 2025'}.\n\n"
@@ -224,7 +224,7 @@ async def generate_final_response(state: MessagesState):
     # Set model temperature based on the user-specified mode
     mode = state.get("mode")
     llm = ChatOpenAI(
-        model="gpt-4o", streaming=True, temperature=0.4 if mode == "foresight" else 0.0
+        model="gpt-4o", streaming=True, temperature=0.4 if mode == "forecast" else 0.0
     )
 
     # Generate final response
@@ -246,10 +246,10 @@ builder = StateGraph(MessagesState)
 # Add nodes
 builder.add_node("input_handler", input_handler)
 builder.add_node("create_recap_query", create_recap_query)
-builder.add_node("create_foresight_query", create_foresight_query)
+builder.add_node("create_forecast_query", create_forecast_query)
 builder.add_node("run_search", run_search)
 builder.add_node("create_recap_prompt", create_recap_prompt)
-builder.add_node("create_foresight_prompt", create_foresight_prompt)
+builder.add_node("create_forecast_prompt", create_forecast_prompt)
 builder.add_node("create_general_prompt", create_general_prompt)
 builder.add_node("create_unsure_prompt", create_unsure_prompt)
 builder.add_node("generate_final_response", generate_final_response)
@@ -259,10 +259,10 @@ builder.add_node("generate_final_response", generate_final_response)
 builder.add_edge(START, "input_handler")
 builder.add_conditional_edges("input_handler", query_router)
 builder.add_edge("create_recap_query", "run_search")
-builder.add_edge("create_foresight_query", "run_search")
+builder.add_edge("create_forecast_query", "run_search")
 builder.add_conditional_edges("run_search", response_router)
 builder.add_edge("create_recap_prompt", "generate_final_response")
-builder.add_edge("create_foresight_prompt", "generate_final_response")
+builder.add_edge("create_forecast_prompt", "generate_final_response")
 builder.add_edge("create_general_prompt", "generate_final_response")
 builder.add_edge("create_unsure_prompt", "generate_final_response")
 builder.add_edge("generate_final_response", END)

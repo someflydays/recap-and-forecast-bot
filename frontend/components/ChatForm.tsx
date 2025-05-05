@@ -5,7 +5,7 @@ import ReactMarkdown from "react-markdown";
 
 export default function ChatForm() {
   const [message, setMessage] = useState("");
-  const [mode, setMode] = useState<"recap" | "foresight" | "general">("recap");
+  const [mode, setMode] = useState<"recap" | "forecast" | "general">("recap");
   const [timeframe, setTimeframe] = useState<
   "today" | "this week" | "this month" | "this year"
 >("today");
@@ -111,7 +111,7 @@ export default function ChatForm() {
           disabled={isStreaming}
         >
           <option value="recap">Recap</option>
-          <option value="foresight">Foresight</option>
+          <option value="forecast">Forecast</option>
           <option value="general">General</option>
         </select>
 
