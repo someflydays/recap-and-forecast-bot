@@ -1,0 +1,4 @@
+{
+  "system_instruction": "You will be given a topic, a timeframe, and today's date. For example: {'topic': 'AI', 'timeframe': 'this week', 'date' : 'April 21, 2025'}\n\nYour goal is to generate a well-structured query for use in web-search, with the aim of finding the most impactful and most relevant information about what's been happening with the given topic during the given timeframe (relative to today's date)."
+}
+

@@ -1,4 +1,5 @@
 import os
+import json
 from dotenv import load_dotenv
 from datetime import datetime
 from typing_extensions import TypedDict
@@ -58,9 +59,16 @@ class MessagesState(TypedDict):
     topic: str
 
 
+def load_prompt(file_path):
+    with open(file_path, "r") as file:
+        return json.load(file)
+
+
 async def input_handler(state: MessagesState) -> MessagesState:
     # Sentiment analysis
-    system_instruction = "You are a topic extractor. The user has been asked to specify a topic. Your goal is to analyze the user's input and identify the topic that they are trying to specify. Based on the user's input, extract the topic that they most likely are trying to specify. Consider that they might make a typo, so if the input is not grammatically correct, then try to understand what they meant to say. Output the extracted topic as concisely as possible, and do not output anything else. If the user does not seem to be trying to specify any topic, then output one word: unclear"
+    system_instruction = load_prompt(
+        "../prompts/input_handler_system_instruction.json"
+    )["system_instruction"]
     full_prompt = (
         (system_instruction)
         + ("\n\nBased on the following user input:\n\n")
@@ -88,7 +96,9 @@ def query_router(state: MessagesState) -> str:
 
 
 async def create_general_prompt(state: MessagesState) -> MessagesState:
-    system_instruction = "You are a prompt engineer. An LLM will be invoked with the prompt that you create. Your job is to create a prompt based on a specified topic. The goal of your prompt is to instruct an LLM to provide a high-level report about the specified topic. Use your best prompt engineering skills to construct your prompt for the LLM. Do not output anything other than the prompt."
+    system_instruction = load_prompt(
+        "../prompts/create_general_prompt_system_instruction.json"
+    )["system_instruction"]
     topic = state.get("topic")
     full_prompt = (
         (system_instruction)
@@ -104,7 +114,9 @@ async def create_general_prompt(state: MessagesState) -> MessagesState:
 
 
 async def create_recap_query(state: MessagesState) -> MessagesState:
-    system_instruction = "You will be given a topic, a timeframe, and today's date. For example: {'topic': 'AI', 'timeframe': 'this week', 'date' : 'April 21, 2025'}\n\nYour goal is to generate a well-structured query for use in web-search, with the aim of finding the most impactful and most relevant information about what's been happening with the given topic during the given timeframe (relative to today's date)."
+    system_instruction = load_prompt(
+        "../prompts/create_recap_query_system_instruction.json"
+    )["system_instruction"]
     full_prompt = (
         (system_instruction)
         + ("\n\nHere is the topic that the user specified:\n\n")
@@ -123,7 +135,9 @@ async def create_recap_query(state: MessagesState) -> MessagesState:
 
 
 async def create_forecast_query(state: MessagesState) -> MessagesState:
-    system_instruction = "You will be given a topic, a timeframe, and today's date. For example: {'topic': 'AI', 'timeframe': 'this week', 'date' : 'April 21, 2025'}\n\nYour goal is to generate a well-structured query for use in web-search, with the aim of finding the most impactful and most insightful information about what will most likely happen with the given topic during the given timeframe (relative to today's date). Your query should focus on finding upcoming events, news, or important things that are scheduled to happen during the given timeframe. Your query should also find key information that can later be used for trend analysis about what might happen regarding the topic in the given timeframe. Based on this goal, formulate a well-structured web-search query"
+    system_instruction = load_prompt(
+        "../prompts/create_forecast_query_system_instruction.json"
+    )["system_instruction"]
     full_prompt = (
         (system_instruction)
         + ("\n\nHere is the topic that the user specified:\n\n")
@@ -161,12 +175,9 @@ def response_router(state: MessagesState) -> str:
 
 
 async def create_recap_prompt(state: MessagesState) -> MessagesState:
-    system_instruction = (
-        "You are a prompt engineer. An LLM will be invoked with the prompt that you create. Your job is to create a prompt based on given SERP results. Do not output anything other than your prompt.\n\n"
-        + "A user has specified a topic, a timeframe, and today's date.\nFor example: {'topic': 'AI', 'timeframe': 'this week', 'date': 'April 21, 2025'}.\n\n"
-        + "The user's input has been passed to a SERP tool, which searched the web for news/events/stories/breakthroughs/info about important things that have been happening regarding that topic during the specified timeframe (relative to today's date).\nFor example: if the user's input was {'topic': 'AI', 'timeframe': 'this week', 'date': 'April 21, 2025'}, then the SERP tool searched the web for AI news that's happening the week of April 21, 2025.\n\n"
-        + "You will be given the SERP tool's search results, and you need to write a prompt that tells the LLM to list the most relevant search results in a well-formatted report. Each listed search result should include a bold title, a concise one-sentence summary, the link to the search result (as a clickable, italicized hyperlink), and a new line between each of those sections. Don't explicitly say 'Title:' or 'Summary:'. There should be no main title of the report, and tell the LLM to not output anything other than the report. Focus on readability and formatting. Avoid truncating anything - generate your own summary or title. Use your best prompt engineering skills to construct your prompt for the LLM."
-    )
+    system_instruction = load_prompt(
+        "../prompts/create_recap_prompt_system_instruction.json"
+    )["system_instruction"]
     full_prompt = (
         (system_instruction)
         + ("\n\nHere is the topic that the user specified:\n\n")
@@ -187,13 +198,9 @@ async def create_recap_prompt(state: MessagesState) -> MessagesState:
 
 
 async def create_forecast_prompt(state: MessagesState) -> MessagesState:
-    system_instruction = (
-        "You are a prompt engineer. An LLM will be invoked with the prompt that you create. Your job is to create a prompt based on given SERP results. Do not output anything other than your prompt.\n\n"
-        + "A user has specified a topic, a timeframe, and today's date.\nFor example: {'topic': 'AI', 'timeframe': 'this week', 'date': 'April 21, 2025'}.\n\n"
-        + "The user's input has been passed to a SERP tool, which searched the web for news/events/stories/breakthroughs/info about that topic, with the goal of gathering enough relevant information to formulate credible speculative insights about what will likely happen during the specified timeframe (relative to today's date).\n\n"
-        + "For example: if the user's input was {'topic': 'AI', 'timeframe': 'this week', 'date': 'April 21, 2025'}, then the SERP tool searched the web for news/stories/events/articles about AI with the goal of eventually using that information for trend analysis to generate a report about specific things that will happen regarding AI this week (with sources), and credible speculative ideas about what is likely to happen regarding AI this week (with reasoning).\n\n"
-        + "You will be given the SERP tool's search results, and you need to write a prompt that tells the LLM to generate this report. Each deterministic upcoming event in the report should include a bold title, a one-sentence summary, a link to the relevant search result (as a clickable, italicized hyperlink), and a new line between each of those sections. Each prediction in the report should include a bold title, a concise summary, a justification section where the user can see exactly why this insight has been predicted, and a new line between each of those sections. There should be no main title of the report, and tell the LLM to not output anything other than the report. Tell the LLM to focus on report readability and formatting. Avoid truncating anything - generate your own summary or title. Add a two new lines to separate each result. Use your best prompt engineering skills to construct your prompt for the LLM."
-    )
+    system_instruction = load_prompt(
+        "../prompts/create_forecast_prompt_system_instruction.json"
+    )["system_instruction"]
     full_prompt = (
         (system_instruction)
         + ("\n\nHere is the topic that the user specified:\n\n")
@@ -214,7 +221,9 @@ async def create_forecast_prompt(state: MessagesState) -> MessagesState:
 
 
 async def create_unsure_prompt(state: MessagesState) -> MessagesState:
-    system_instruction = "Please tell the user that you are unsure what topic they are trying to specify, and suggest that they specify a topic in the text box. Do not output anything other than your message to the user."
+    system_instruction = load_prompt(
+        "../prompts/create_unsure_prompt_system_instruction.json"
+    )["system_instruction"]
     system_message = SystemMessage(content=(system_instruction))
     state["messages"].append(system_message)
     return state

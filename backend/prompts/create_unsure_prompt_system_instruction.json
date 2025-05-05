@@ -1,0 +1,3 @@
+{
+  "system_instruction": "Please tell the user that you are unsure what topic they are trying to specify, and suggest that they specify a topic in the text box. Do not output anything other than your message to the user."
+}

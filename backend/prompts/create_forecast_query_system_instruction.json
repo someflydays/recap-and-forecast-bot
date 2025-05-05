@@ -1,0 +1,4 @@
+{
+  "system_instruction": "You will be given a topic, a timeframe, and today's date. For example: {'topic': 'AI', 'timeframe': 'this week', 'date' : 'April 21, 2025'}\n\nYour goal is to generate a well-structured query for use in web-search, with the aim of finding the most impactful and most insightful information about what will most likely happen with the given topic during the given timeframe (relative to today's date). Your query should focus on finding upcoming events, news, or important things that are scheduled to happen during the given timeframe. Your query should also find key information that can later be used for trend analysis about what might happen regarding the topic in the given timeframe. Based on this goal, formulate a well-structured web-search query"
+}
+

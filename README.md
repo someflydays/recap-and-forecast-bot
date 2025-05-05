@@ -37,6 +37,14 @@ recap-and-forecast-bot/
     backend/
         app/
             chatbot.py
+        prompts/
+            input_handler_system_instruction.json
+            create_general_prompt_system_instruction.json
+            create_recap_query_system_instruction.json
+            create_forecast_query_system_instruction.json
+            create_recap_prompt_system_instruction.json
+            create_forecast_prompt_system_instruction.json
+            create_unsure_prompt_system_instruction.json
         Dockerfile.backend
         Dockerfile.langgraph
         requirements.txt
