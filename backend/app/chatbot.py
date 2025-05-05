@@ -1,24 +1,33 @@
-from fastapi import FastAPI
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, AnyMessage
-from fastapi.responses import StreamingResponse
-from langchain_openai import ChatOpenAI
-from langgraph.graph import StateGraph, START, END
+import os
 from dotenv import load_dotenv
-from pydantic import BaseModel
+from datetime import datetime
 from typing_extensions import TypedDict
 from typing import Annotated
-from langgraph.graph.message import add_messages
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+
+from langchain_core.messages import (
+    HumanMessage,
+    AIMessage,
+    SystemMessage,
+    AnyMessage,
+    AIMessageChunk,
+)
+from langchain_openai import ChatOpenAI
+from langgraph.graph import StateGraph, START, END
+from langgraph.graph.message import add_messages
 from langchain_community.tools.tavily_search import TavilySearchResults
-import traceback
-from datetime import datetime
-import os
 from langgraph_sdk import get_client
+
+from pydantic import BaseModel
+
 
 # Load API keys from recap-and-forecast-bot/backend/.env
 load_dotenv()
-GRAPH_URL = os.getenv("LANGSMITH_API_URL")
 GRAPH_KEY = os.getenv("LANGSMITH_API_KEY")
+GRAPH_URL = os.getenv("LANGSMITH_API_URL", "http://localhost:8001")
 
 
 # Instantiate FastAPI app
@@ -36,31 +45,23 @@ app.add_middleware(
 class ChatRequest(BaseModel):
     message: str
     mode: str  # "recap", "foresight", or "general"
-    timeframe: str  # "today", "this week", etc.
+    timeframe: str  # "today", "this week", ...
 
 
-# Define API response schema
+# Define API response schema, validated with Pydantic
 class ChatResponse(BaseModel):
     response: str
 
 
 # Define graph state schema
-args = TypedDict(
-    "MessagesState",
-    {
-        "messages": Annotated[list[AnyMessage], add_messages],
-        "mode": str,
-        "timeframe": str,
-        "topic": str,
-    },
-)
+class MessagesState(TypedDict):
+    messages: Annotated[list[AnyMessage], add_messages]
+    mode: str
+    timeframe: str
+    topic: str
 
 
-class MessagesState(args):
-    pass
-
-
-def input_handler(state: MessagesState) -> MessagesState:
+async def input_handler(state: MessagesState) -> MessagesState:
     # Sentiment analysis
     system_instruction = "You are a topic extractor. The user has been asked to specify a topic. Your goal is to analyze the user's input and identify the topic that they are trying to specify. Based on the user's input, extract the topic that they most likely are trying to specify. Consider that they might make a typo, so if the input is not grammatically correct, then try to understand what they meant to say. Output the extracted topic as concisely as possible, and do not output anything else. If the user does not seem to be trying to specify any topic, then output one word: unclear"
     full_prompt = (
@@ -70,7 +71,7 @@ def input_handler(state: MessagesState) -> MessagesState:
         + ("\n\nExtract the topic.")
     )
     llm = ChatOpenAI(model="gpt-4o", temperature=0.2)  # Fast, flexible
-    topic = llm.invoke([full_prompt]).content
+    topic = (await llm.ainvoke([full_prompt])).content
     state["topic"] = topic
     return state
 
@@ -89,7 +90,7 @@ def query_router(state: MessagesState) -> str:
             return "create_general_prompt"
 
 
-def create_general_prompt(state: MessagesState) -> MessagesState:
+async def create_general_prompt(state: MessagesState) -> MessagesState:
     system_instruction = "You are a prompt engineer. An LLM will be invoked with the prompt that you create. Your job is to create a prompt based on a specified topic. The goal of your prompt is to instruct an LLM to provide a high-level report about the specified topic. Use your best prompt engineering skills to construct your prompt for the LLM. Do not output anything other than the prompt."
     topic = state.get("topic")
     full_prompt = (
@@ -98,14 +99,14 @@ def create_general_prompt(state: MessagesState) -> MessagesState:
         + topic
         + ("\n\nGenerate the prompt.")
     )
-    llm = ChatOpenAI(model="o4-mini")  # Fast, affordable reasoning model
-    response = llm.invoke([full_prompt])
-    ai_message = AIMessage(content=(response.content))
-    state["messages"].append(ai_message)
+    llm = ChatOpenAI(model="o4-mini")
+    response = await llm.ainvoke([full_prompt])
+    system_message = SystemMessage(content=(response.content))
+    state["messages"].append(system_message)
     return state
 
 
-def create_recap_query(state: MessagesState) -> MessagesState:
+async def create_recap_query(state: MessagesState) -> MessagesState:
     system_instruction = "You will be given a topic, a timeframe, and today's date. For example: {'topic': 'AI', 'timeframe': 'this week', 'date' : 'April 21, 2025'}\n\nYour goal is to generate a well-structured query for use in web-search, with the aim of finding the most impactful and most relevant information about what's been happening with the given topic during the given timeframe (relative to today's date)."
     full_prompt = (
         (system_instruction)
@@ -117,14 +118,14 @@ def create_recap_query(state: MessagesState) -> MessagesState:
         + ((datetime.now().date()).strftime("%B %d, %Y"))
         + ("\n\nNow formulate your query.")
     )
-    llm = ChatOpenAI(model="o4-mini")  # Fast, affordable reasoning model
-    response = llm.invoke([full_prompt])
-    ai_message = AIMessage(content=(response.content))
-    state["messages"].append(ai_message)
+    llm = ChatOpenAI(model="o4-mini")
+    response = await llm.ainvoke([full_prompt])
+    system_message = SystemMessage(content=(response.content))
+    state["messages"].append(system_message)
     return state
 
 
-def create_foresight_query(state: MessagesState) -> MessagesState:
+async def create_foresight_query(state: MessagesState) -> MessagesState:
     system_instruction = "You will be given a topic, a timeframe, and today's date. For example: {'topic': 'AI', 'timeframe': 'this week', 'date' : 'April 21, 2025'}\n\nYour goal is to generate a well-structured query for use in web-search, with the aim of finding the most impactful and most insightful information about what will most likely happen with the given topic during the given timeframe (relative to today's date). Your query should focus on finding upcoming events, news, or important things that are scheduled to happen during the given timeframe. Your query should also find key information that can later be used for trend analysis about what might happen regarding the topic in the given timeframe. Based on this goal, formulate a well-structured web-search query"
     full_prompt = (
         (system_instruction)
@@ -136,21 +137,21 @@ def create_foresight_query(state: MessagesState) -> MessagesState:
         + ((datetime.now().date()).strftime("%B %d, %Y"))
         + ("\n\nNow formulate your query.")
     )
-    llm = ChatOpenAI(model="o4-mini")  # Fast, affordable reasoning model
-    response = llm.invoke([full_prompt])
-    ai_message = AIMessage(content=(response.content))
-    state["messages"].append(ai_message)
+    llm = ChatOpenAI(model="o4-mini")
+    response = await llm.ainvoke([full_prompt])
+    system_message = SystemMessage(content=(response.content))
+    state["messages"].append(system_message)
     return state
 
 
-def run_search(state: MessagesState) -> MessagesState:
+async def run_search(state: MessagesState) -> MessagesState:
     # Use SERP tool
     search_query = state["messages"][-1].content.strip('"').strip()
     tavily_search_tool = TavilySearchResults(max_results=4)
     search_results = tavily_search_tool.invoke(search_query)  # list of dicts
     search_results_string = str(search_results)
-    ai_message = AIMessage(content=(search_results_string))
-    state["messages"].append(ai_message)
+    system_message = SystemMessage(content=(search_results_string))
+    state["messages"].append(system_message)
     return state
 
 
@@ -162,7 +163,7 @@ def response_router(state: MessagesState) -> str:
         return "create_foresight_prompt"
 
 
-def create_recap_prompt(state: MessagesState) -> MessagesState:
+async def create_recap_prompt(state: MessagesState) -> MessagesState:
     system_instruction = (
         "You are a prompt engineer. An LLM will be invoked with the prompt that you create. Your job is to create a prompt based on given SERP results. Do not output anything other than your prompt.\n\n"
         + "A user has specified a topic, a timeframe, and today's date.\nFor example: {'topic': 'AI', 'timeframe': 'this week', 'date': 'April 21, 2025'}.\n\n"
@@ -182,13 +183,13 @@ def create_recap_prompt(state: MessagesState) -> MessagesState:
         + ("\n\n\nNow construct your prompt.\n\n")
     )
     llm = ChatOpenAI(model="gpt-4o", temperature=0.1)  # Fast, flexible
-    response = llm.invoke([full_prompt])
-    ai_message = AIMessage(content=(response.content))
-    state["messages"].append(ai_message)
+    response = await llm.ainvoke([full_prompt])
+    system_message = SystemMessage(content=(response.content))
+    state["messages"].append(system_message)
     return state
 
 
-def create_foresight_prompt(state: MessagesState) -> MessagesState:
+async def create_foresight_prompt(state: MessagesState) -> MessagesState:
     system_instruction = (
         "You are a prompt engineer. An LLM will be invoked with the prompt that you create. Your job is to create a prompt based on given SERP results. Do not output anything other than your prompt.\n\n"
         + "A user has specified a topic, a timeframe, and today's date.\nFor example: {'topic': 'AI', 'timeframe': 'this week', 'date': 'April 21, 2025'}.\n\n"
@@ -209,34 +210,41 @@ def create_foresight_prompt(state: MessagesState) -> MessagesState:
         + ("\n\nNow construct your prompt.\n\n")
     )
     llm = ChatOpenAI(model="gpt-4o", temperature=0.1)  # Fast, flexible
-    response = llm.invoke([full_prompt])
-    ai_message = AIMessage(content=(response.content))
-    state["messages"].append(ai_message)
+    response = await llm.ainvoke([full_prompt])
+    system_message = SystemMessage(content=(response.content))
+    state["messages"].append(system_message)
     return state
 
 
-def create_unsure_prompt(state: MessagesState) -> MessagesState:
+async def create_unsure_prompt(state: MessagesState) -> MessagesState:
     system_instruction = "Please tell the user that you are unsure what topic they are trying to specify, and suggest that they specify a topic in the text box. Do not output anything other than your message to the user."
     system_message = SystemMessage(content=(system_instruction))
     state["messages"].append(system_message)
     return state
 
 
-def generate_final_response(state: MessagesState) -> MessagesState:
-    prompt = state["messages"][-1].content
+async def generate_final_response(state: MessagesState):
+    # Set model temperature based on the user-specified mode
     mode = state.get("mode")
-    if mode == "foresight":
-        llm = ChatOpenAI(model="gpt-4o", streaming=True, temperature=0.4)
-    else:
-        llm = ChatOpenAI(model="gpt-4o", streaming=True, temperature=0)
-    response = llm.invoke([prompt])
-    ai_message = AIMessage(content=response.content)
-    state["messages"].append(ai_message)
-    return state
+    llm = ChatOpenAI(
+        model="gpt-4o", streaming=True, temperature=0.4 if mode == "foresight" else 0.0
+    )
+
+    # Generate final response
+    print("Generating final response...")
+    prompt = state["messages"][-1].content
+    # final_response = await llm.ainvoke([prompt])
+    # return {"messages": [final_response]}
+    full = ""
+    for chunk in await llm.ainvoke([prompt]):
+        yield {"messages": [chunk]}
+    state["messages"].append(AIMessage(content=full))
+    yield state
 
 
 # Create graph
 builder = StateGraph(MessagesState)
+
 
 # Add nodes
 builder.add_node("input_handler", input_handler)
@@ -248,6 +256,7 @@ builder.add_node("create_foresight_prompt", create_foresight_prompt)
 builder.add_node("create_general_prompt", create_general_prompt)
 builder.add_node("create_unsure_prompt", create_unsure_prompt)
 builder.add_node("generate_final_response", generate_final_response)
+
 
 # Add edges
 builder.add_edge(START, "input_handler")
@@ -261,6 +270,7 @@ builder.add_edge("create_general_prompt", "generate_final_response")
 builder.add_edge("create_unsure_prompt", "generate_final_response")
 builder.add_edge("generate_final_response", END)
 
+
 # Compile graph
 graph = builder.compile()
 
@@ -268,30 +278,37 @@ graph = builder.compile()
 # API chat endpoint
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
+    """
     # Create LangSmith API client
     client = get_client(url=GRAPH_URL, api_key=GRAPH_KEY)
-
-    # Create a fresh thread (per request)
+    assistant_id = "recap-and-forecast-bot"
     thread = await client.threads.create()
+    """
 
-    # Initialize conversation state based on incoming API request
-    input_state = {
-        "messages": [HumanMessage(content=request.message)],
-        "mode": request.mode,
-        "timeframe": request.timeframe,
-    }
-
-    # Stream tokens and metadata objects
     async def event_stream():
-        async for ev in client.runs.stream(
-            thread_id=thread["thread_id"],
-            assistant_id="recap-and-forecast-bot",
-            input=input_state,
-            stream_mode="messages-tuple",
+        # Initialize conversation state based on incoming API request
+        input_state = {
+            "messages": [HumanMessage(content=request.message)],
+            "mode": request.mode,
+            "timeframe": request.timeframe,
+        }
+
+        # Stream tokens and metadata objects
+        async for msg, metadata in graph.astream(
+            input_state,
+            stream_mode="messages",
         ):
-            if ev.event == "messages":
-                for msg in ev.data:
-                    if msg["type"] == "AIMessageChunk":
-                        yield msg["content"]
+
+            # Skip outputs from other nodes
+            if metadata.get("langgraph_node") != "generate_final_response":
+                continue
+
+            # Skip system messages / tool messages
+            if msg.type not in ("AIMessage", "AIMessageChunk"):
+                continue
+
+            content = getattr(msg, "content", None)
+            if content:
+                yield content.encode()
 
     return StreamingResponse(event_stream(), media_type="text/plain")
