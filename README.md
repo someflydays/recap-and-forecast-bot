@@ -117,9 +117,9 @@ pip install -r backend/requirements.txt
 langgraph dev --port 8001 --host 0.0.0.0
 ```
 
-> Then navigate to https://smith.langchain.com/studio/?baseURL=http://localhost:2025 in a browser to access the LangGraph Studio IDE.
+> Then navigate to https://smith.langchain.com/studio/?baseUrl=http://0.0.0.0:8001 in a browser to access your LangGraph Studio IDE.
 
-> **Note:** Use Chrome, Edge, or Firefox for accessing LangGraph Studio. Using Safari is not supported.
+> **Note:** Use Chrome, Edge, or Firefox for accessing LangGraph Studio. Using Safari is not easily supported.
 
 **4. Start the FastAPI backend by running this command from the `recap-and-forecast-bot/backend/` directory:**
 ```
