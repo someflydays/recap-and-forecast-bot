@@ -3,8 +3,8 @@ import json
 from dotenv import load_dotenv
 from datetime import datetime
 from typing_extensions import TypedDict
-from typing import Annotated
-from fastapi import FastAPI
+from typing import Annotated, Literal
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from langchain_core.messages import (
@@ -38,12 +38,18 @@ app.add_middleware(
 )
 
 
+# Define valid options
+Mode = Literal["recap", "forecast", "general"]
+Timeframe = Literal["today", "this week", "this month", "this year"]
+Model = Literal["gpt-4o", "gpt-5.2-2025-12-11"]
+
+
 # Define API request schema, validated with Pydantic
 class ChatRequest(BaseModel):
     message: str
-    mode: str  # "recap", "forecast", or "general"
-    timeframe: str  # "today", "this week", ...
-    model: str = "gpt-4o"  # "gpt-4o" or "gpt-5.2-2025-12-11"
+    mode: Mode
+    timeframe: Timeframe
+    model: Model = "gpt-4o"
 
 
 # Define API response schema, validated with Pydantic
@@ -166,9 +172,12 @@ async def create_forecast_query(state: MessagesState) -> MessagesState:
 async def run_search(state: MessagesState) -> MessagesState:
     # Use SERP tool
     search_query = state["messages"][-1].content.strip('"').strip()
-    tavily_search_tool = TavilySearchResults(max_results=4)
-    search_results = tavily_search_tool.invoke(search_query)  # list of dicts
-    search_results_string = str(search_results)
+    tavily_search_tool = TavilySearchResults(max_results=6)
+    try:
+        search_results = tavily_search_tool.invoke(search_query)  # list of dicts
+        search_results_string = str(search_results)
+    except Exception as e:
+        search_results_string = f"Search failed: {str(e)}. Please provide general information about the topic."
     system_message = SystemMessage(content=(search_results_string))
     state["messages"].append(system_message)
     return state
