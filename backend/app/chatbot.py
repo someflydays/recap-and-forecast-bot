@@ -43,6 +43,7 @@ class ChatRequest(BaseModel):
     message: str
     mode: str  # "recap", "forecast", or "general"
     timeframe: str  # "today", "this week", ...
+    model: str = "gpt-4o"  # "gpt-4o" or "gpt-5.2-2025-12-11"
 
 
 # Define API response schema, validated with Pydantic
@@ -56,6 +57,7 @@ class MessagesState(TypedDict):
     mode: str
     timeframe: str
     topic: str
+    model: str
 
 
 # Create a function to load prompts from JSON files
@@ -238,8 +240,9 @@ async def create_unsure_prompt(state: MessagesState) -> MessagesState:
 async def generate_final_response(state: MessagesState):
     # Set model temperature based on the user-specified mode
     mode = state.get("mode")
+    model = state.get("model", "gpt-4o")
     llm = ChatOpenAI(
-        model="gpt-4o", streaming=True, temperature=0.4 if mode == "forecast" else 0.0
+        model=model, streaming=True, temperature=0.4 if mode == "forecast" else 0.0
     )
 
     # Generate final response
@@ -301,6 +304,7 @@ async def chat(request: ChatRequest):
             "messages": [HumanMessage(content=request.message)],
             "mode": request.mode,
             "timeframe": request.timeframe,
+            "model": request.model,
         }
 
         # Stream tokens and metadata objects
